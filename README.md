@@ -14,6 +14,6 @@ VoteSecure is a decentralized application (dApp) for running transparent, tamper
 
 🌐 Live Site: https://votesecure.net
 
-🎯 Intended Audience: Anyone running, auditing, or participating in secure and verifiable elections or polls.________________________________________
+🎯 Intended Audience: Anyone running, auditing, or participating in secure and verifiable elections or polls.
 
 (See Votesecure_White_Paper.pdf for details)
