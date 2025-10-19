@@ -39,3 +39,6 @@ temp/
 # Test coverage
 coverage/
 .nyc_output/
+
+#Private notes
+PS_Local_Notes/
