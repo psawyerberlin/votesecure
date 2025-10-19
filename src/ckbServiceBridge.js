@@ -10,7 +10,7 @@ import { config, helpers, RPC, Indexer, BI } from '@ckb-lumos/lumos';
 // ---------------- Configuration ----------------
 const DEBUG_LOG = true;
 const USE_MAINNET = false;
-const USE_PRIVATE_NODE = true;
+const USE_PRIVATE_NODE = false;
 
 // JoyID endpoints
 const JOYID_NET = USE_MAINNET ? 'mainnet' : 'testnet';

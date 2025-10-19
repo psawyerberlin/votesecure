@@ -1304,17 +1304,48 @@ window.addEventListener('unhandledrejection', (event) => {
 // ============================================================================
 
 // Make functions available in console for debugging
+// Make module functions accessible to inline HTML handlers AND keep the debug namespace
 if (typeof window !== 'undefined') {
-    window.VoteSecureOrganizer = {
-        currentOrganizer,
-        electionConfig,
-        ckbServiceReady,
-        refreshBalance,
-        connectWallet,
-        disconnectWallet,
-        showNotification
-    };
-    
-    console.log('VoteSecure Organizer loaded successfully');
-    console.log('Debug interface available at: window.VoteSecureOrganizer');
+  // Keep your namespaced debug/export object
+  window.VoteSecureOrganizer = {
+    currentOrganizer,
+    electionConfig,
+    ckbServiceReady,
+    refreshBalance,
+    connectWallet,
+    disconnectWallet,
+    showNotification,
+  };
+
+  // Expose functions used by inline onclick="..."
+  Object.assign(window, {
+    // form navigation
+    nextStep,
+    previousStep,
+
+    // question/option management
+    addQuestion,
+    removeQuestion,
+    addOption,
+    removeOption,
+    updateQuestionType,
+
+    // view switching
+    showMyElections,
+    showCreateView,
+
+    // elections list actions
+    viewElectionDetails,
+    copyVoterUrl,
+    viewLiveStats,
+    releaseResults,
+
+    // success modal + utilities
+    closeSuccessModal,
+    downloadInviteMaterials,
+    copyToClipboard,
+  });
+
+  console.log('VoteSecure Organizer loaded successfully');
+  console.log('Debug interface available at: window.VoteSecureOrganizer');
 }
