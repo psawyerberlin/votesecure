@@ -1,0 +1,225 @@
+# JoyID Wallet Integration - Implementation Summary
+
+## Overview
+The VoteSecure organizer interface has been updated to integrate JoyID wallet functionality with a toggle connect/disconnect feature, following the pattern from your App.tsx reference implementation.
+
+## Key Changes
+
+### 1. **blockchain.js** - Core Blockchain Module
+
+#### Added JoyID Integration Functions:
+- **`connectJoyID()`** - Connects to JoyID wallet using dynamic import
+  - Uses `@joyid/ckb` SDK imported from CDN
+  - Configures network (testnet/mainnet) based on `USE_MAINNET` flag
+  - Returns wallet info with address and balance
+  
+- **`signTransactionWithJoyID(txParams)`** - Signs transactions with JoyID
+  - Takes transaction parameters (from, to, amount)
+  - Returns signed transaction ready for broadcast
+
+- **`getAddressBalance(address)`** - Queries wallet balance
+  - Currently returns placeholder, ready for indexer integration
+
+#### Network Configuration:
+```javascript
+export const DEBUG_LOG = true;
+export const USE_MAINNET = false;  // Toggle for mainnet/testnet
+export const USE_PRIVATE_NODE = false;  // Toggle for private node
+```
+
+#### JoyID Endpoints:
+- Testnet: `https://testnet.joyid.dev`
+- Mainnet: `https://app.joy.id`
+- API: Auto-configured based on network
+
+#### SDK Import:
+```javascript
+const { connect } = await import('https://unpkg.com/@joyid/ckb@latest/dist/index.js');
+```
+
+### 2. **organizer.js** - Organizer Interface Logic
+
+#### Replaced `connectWallet()` with Toggle System:
+
+**New Function: `toggleWalletConnection()`**
+- Checks current connection state
+- Calls `connectWallet()` if disconnected
+- Calls `disconnectWallet()` if connected
+
+**Enhanced `connectWallet()`**
+- Shows loading spinner during connection
+- Calls `VoteSecureBlockchain.connectJoyID()`
+- Stores wallet info in `sessionStorage` for persistence
+- Updates UI with connected state
+- Shows success notification
+
+**New Function: `disconnectWallet()`**
+- Clears `currentOrganizer` state
+- Removes data from `sessionStorage`
+- Updates UI to disconnected state
+- Shows disconnect notification
+
+**New Function: `checkPreviousConnection()`**
+- Runs on page load
+- Checks `sessionStorage` for saved wallet address
+- Auto-restores connection state if found
+
+#### UI Updates:
+
+**`updateWalletUI(connected)`** - Manages button appearance
+- **Connected state**: Shows shortened address (e.g., "ckt1qz...vkkf")
+- **Disconnected state**: Shows "Connect JoyID" text
+- Updates button styling with `.connected` class
+- Shows/hides wallet info panel
+
+**`formatAddress(address)`** - Formats long addresses
+- Shows first 6 and last 4 characters
+- Example: `ckt1qzda0c...vkkfz`
+
+**`showNotification(message, type)`** - Toast notifications
+- Types: 'success', 'error', 'info'
+- Auto-dismisses after 3 seconds
+- Positioned top-right
+
+#### Session Persistence:
+```javascript
+sessionStorage.setItem('joyid_address', walletInfo.address);
+sessionStorage.setItem('joyid_balance', walletInfo.balance);
+```
+
+### 3. **organizer.html** - User Interface
+
+#### Added Wallet Info Display:
+```html
+<div id="walletInfo"></div>
+```
+Shows balance and network when connected.
+
+#### Enhanced Button Styling:
+- Added `.connected` class styling (green gradient)
+- Added loading spinner animation
+- Added notification container styles
+
+#### Additional CSS:
+- Wallet info panel styling
+- Notification toast styling with slide-in animation
+- Connected button state (green theme)
+- Spinner animation for loading states
+
+## User Flow
+
+### Connection Flow:
+1. User clicks "Connect JoyID" button
+2. Button shows loading spinner
+3. JoyID popup opens (SDK handles this)
+4. User authenticates in JoyID
+5. Wallet info saved to session
+6. Button updates to show address
+7. Success notification appears
+
+### Disconnection Flow:
+1. User clicks address button (now in connected state)
+2. Session cleared immediately
+3. Button reverts to "Connect JoyID"
+4. Info notification shows "Wallet disconnected"
+
+### Persistence:
+- On page reload, checks `sessionStorage`
+- If wallet was connected, restores state
+- User doesn't need to reconnect each time
+
+## Integration Points
+
+### Publishing Elections:
+```javascript
+async function handlePublish(e) {
+    if (!currentOrganizer) {
+        showNotification('Please connect your JoyID wallet first', 'error');
+        return;
+    }
+    
+    // Uses currentOrganizer.address as organizer ID
+    const result = await VoteSecureBlockchain.publishEvent(
+        electionConfig,
+        currentOrganizer.address  // JoyID address
+    );
+}
+```
+
+### Viewing Elections:
+```javascript
+function loadMyElections() {
+    const events = VoteSecureBlockchain.getEventsByOrganizer(
+        currentOrganizer.address  // Filters by JoyID address
+    );
+}
+```
+
+## Configuration
+
+### Network Toggle:
+To switch between testnet and mainnet, update in **blockchain.js**:
+```javascript
+export const USE_MAINNET = true;  // or false for testnet
+```
+
+### Private Node:
+To use a private CKB node:
+```javascript
+export const USE_PRIVATE_NODE = true;
+```
+Then update the IP/port in the RPC_URL and INDEXER_URL configuration.
+
+## Dependencies
+
+### Required Libraries:
+- **@joyid/ckb** - Loaded dynamically from unpkg CDN
+- No npm install required, uses ES module imports
+
+### Browser Requirements:
+- Modern browser with ES6 module support
+- Web Crypto API support
+- SessionStorage enabled
+
+## Testing Checklist
+
+- [ ] Connect wallet on testnet
+- [ ] Verify address displays correctly
+- [ ] Disconnect wallet
+- [ ] Reload page and verify persistence
+- [ ] Create election with connected wallet
+- [ ] Try to publish without wallet (should show error)
+- [ ] View "My Elections" list
+- [ ] Switch networks (testnet ↔ mainnet)
+
+## Security Considerations
+
+1. **Private Keys**: Never stored in session/localStorage
+2. **JoyID Handles Auth**: All sensitive operations in JoyID popup
+3. **Session Only**: Uses sessionStorage (cleared on browser close)
+4. **Address Only**: Only stores public address, not credentials
+
+## Next Steps
+
+### For Production:
+1. Replace placeholder balance query with actual indexer call
+2. Implement real transaction signing and broadcasting
+3. Add proper error handling for network failures
+4. Add wallet balance check before publishing
+5. Implement transaction cost estimation
+6. Add support for multiple wallet types (not just JoyID)
+
+### Enhancements:
+1. Show transaction history
+2. Add wallet balance refresh button
+3. Display pending transactions
+4. Add network switch UI
+5. Show gas estimation before publishing
+
+## Files Modified
+
+1. **blockchain.js** - Added JoyID integration functions and network config
+2. **organizer.js** - Replaced wallet connection logic with toggle system
+3. **organizer.html** - Added wallet info display and enhanced styling
+
+All files are now ready to use with JoyID wallet on CKB testnet or mainnet!

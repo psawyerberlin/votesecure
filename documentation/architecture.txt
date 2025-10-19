@@ -1,0 +1,15 @@
+votesecure/
+├─ package.json
+├─ .gitignore
+├─ index.html
+├─ src/
+│  └─ blockchain.js
+│  └─ ckbServiceBridge.js
+
+├─ web/
+│  ├─ voter.html
+│  ├─ organizer.html
+│  ├─ voter.js
+│  ├─ organizer.js
+│  └─ votesecure.css
+└─ node_modules/  (auto-created)

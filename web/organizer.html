@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Election - VoteSecure</title>
+    <link rel="stylesheet" href="votesecure.css">
+    <style>
+        /* Additional styles for JoyID integration */
+        #connectWalletBtn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        #connectWalletBtn.connected {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        #connectWalletBtn.connected:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+        
+        #connectWalletBtn.loading {
+            opacity: 0.7;
+            cursor: wait;
+        }
+        
+        #walletInfo {
+            margin-left: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 8px;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        #walletInfo.show {
+            display: block;
+        }
+        
+        .wallet-details {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .wallet-label {
+            color: #6b7280;
+        }
+        
+        .wallet-balance {
+            font-weight: 600;
+            color: #10b981;
+        }
+        
+        .wallet-network {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+        
+        .wallet-address {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            max-width: 400px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification-success {
+            border-left: 4px solid #10b981;
+        }
+        
+        .notification-error {
+            border-left: 4px solid #ef4444;
+        }
+        
+        .notification-info {
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .notification-warning {
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .spinner-small {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .wallet-disconnect-confirm {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.5rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+        }
+        
+        .wallet-disconnect-confirm.show {
+            display: block;
+        }
+        
+        .disconnect-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* Service status indicator */
+        .service-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.25rem;
+        }
+        
+        .service-status.ready {
+            background: #10b981;
+        }
+        
+        .service-status.error {
+            background: #ef4444;
+        }
+        
+        .service-status.loading {
+            background: #f59e0b;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="organizer-page">
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="../index.html">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                    </svg>
+                    <span class="logo-text">VoteSecure</span>
+                </a>
+            </div>
+            <div class="nav-actions">
+                <button id="myElectionsBtn" onclick="showMyElections()" class="btn btn-sm btn-secondary">
+                    My Elections
+                </button>
+                <div id="walletInfo"></div>
+                <button id="connectWalletBtn" class="btn btn-sm btn-primary">
+                    <span class="service-status loading"></span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="3" y="7" width="18" height="13" rx="2"></rect>
+                        <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                    </svg>
+                    <span class="btn-text">Connect JoyID</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Create Election View -->
+            <div id="createView">
+                <div class="page-header">
+                    <h1>Create New Election</h1>
+                    <p>Configure your privacy-preserving election on the blockchain</p>
+                </div>
+
+                <!-- Progress Steps -->
+                <div class="progress-steps">
+                    <div class="step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Basic Info</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Questions</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Schedule</div>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Eligibility</div>
+                    </div>
+                    <div class="step" data-step="5">
+                        <div class="step-number">5</div>
+                        <div class="step-label">Privacy</div>
+                    </div>
+                    <div class="step" data-step="6">
+                        <div class="step-number">6</div>
+                        <div class="step-label">Review</div>
+                    </div>
+                </div>
+
+                <!-- Election Form -->
+                <form id="electionForm" class="election-form">
+                    <!-- Step 1: Basic Information -->
+                    <div class="form-step active" data-step="1">
+                        <h2>Basic Information</h2>
+                        
+                        <div class="form-group">
+                            <label for="electionTitle">Election Title *</label>
+                            <input type="text" id="electionTitle" required placeholder="e.g., Annual Board Election 2025">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="electionDescription">Description</label>
+                            <textarea id="electionDescription" rows="4" placeholder="Describe the purpose and context of this election (Markdown supported)"></textarea>
+                            <small>Supports Markdown formatting. HTML tags are sanitized.</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="estimatedVoters">Estimated Number of Voters *</label>
+                            <input type="number" id="estimatedVoters" required min="1" value="100">
+                            <small>Used to estimate blockchain costs</small>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Questions -->
+                    <div class="form-step" data-step="2">
+                        <h2>Questions & Options</h2>
+                        
+                        <div id="questionsContainer">
+                            <!-- Questions will be added dynamically -->
+                        </div>
+                        
+                        <button type="button" onclick="addQuestion()" class="btn btn-secondary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="16"></line>
+                                <line x1="8" y1="12" x2="16" y2="12"></line>
+                            </svg>
+                            Add Question
+                        </button>
+                    </div>
+
+                    <!-- Step 3: Schedule -->
+                    <div class="form-step" data-step="3">
+                        <h2>Schedule</h2>
+                        
+                        <div class="form-group">
+                            <label for="startTime">Voting Start Time *</label>
+                            <input type="datetime-local" id="startTime" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="endTime">Voting End Time *</label>
+                            <input type="datetime-local" id="endTime" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="resultsReleaseTime">Results Release Time *</label>
+                            <input type="datetime-local" id="resultsReleaseTime" required>
+                            <small>Results will be locked until this time and require threshold confirmations</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="allowedUpdates">Allowed Ballot Updates *</label>
+                            <input type="number" id="allowedUpdates" min="1" max="10" value="3" required>
+                            <small>Number of times voters can change their ballot</small>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Eligibility -->
+                    <div class="form-step" data-step="4">
+                        <h2>Voter Eligibility</h2>
+                        
+                        <div class="form-group">
+                            <label>Eligibility Type *</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="eligibilityType" value="public" checked>
+                                    <div class="radio-content">
+                                        <strong>Public</strong>
+                                        <p>Anyone with the link can vote (Sybil risk)</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-option">
+                                    <input type="radio" name="eligibilityType" value="invite_key">
+                                    <div class="radio-content">
+                                        <strong>Invite Key</strong>
+                                        <p>Single shared key required to vote</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-option">
+                                    <input type="radio" name="eligibilityType" value="per_voter">
+                                    <div class="radio-content">
+                                        <strong>Per-Voter Keys</strong>
+                                        <p>Unique key for each voter (most secure)</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-option">
+                                    <input type="radio" name="eligibilityType" value="curated_list">
+                                    <div class="radio-content">
+                                        <strong>Curated List</strong>
+                                        <p>Pre-approved voter list (JoyID addresses)</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="voterListContainer" style="display: none;">
+                            <div class="form-group">
+                                <label>Voter List (one email per line)</label>
+                                <textarea id="voterList" rows="6" placeholder="voter1@example.com&#10;voter2@example.com&#10;voter3@example.com"></textarea>
+                                <small>Emails used only for distribution, never stored on-chain</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableCaptcha">
+                                Enable CAPTCHA (reduces bot voting)
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableRateLimit" checked>
+                                Enable Rate Limiting (recommended)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Privacy & Reporting -->
+                    <div class="form-step" data-step="5">
+                        <h2>Privacy & Reporting</h2>
+                        
+                        <div class="form-group">
+                            <label>Anonymity Level *</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="anonymityLevel" value="full" checked>
+                                    <div class="radio-content">
+                                        <strong>Full Anonymity</strong>
+                                        <p>Individual votes never exposed</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-option">
+                                    <input type="radio" name="anonymityLevel" value="group">
+                                    <div class="radio-content">
+                                        <strong>Group Anonymity</strong>
+                                        <p>Results by group with k-anonymity</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Reporting Granularity *</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="reportingGranularity" value="totals_only" checked>
+                                    <div class="radio-content">
+                                        <strong>Totals Only</strong>
+                                        <p>Show aggregate results only</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-option">
+                                    <input type="radio" name="reportingGranularity" value="by_group">
+                                    <div class="radio-content">
+                                        <strong>By Group</strong>
+                                        <p>Break down by grouping fields</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="groupingContainer" style="display: none;">
+                            <div class="form-group">
+                                <label>Grouping Fields</label>
+                                <input type="text" id="groupingFields" placeholder="e.g., city, age_group, department">
+                                <small>Comma-separated field names voters will provide</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="minGroupSize">Minimum Group Size (k-anonymity) *</label>
+                                <input type="number" id="minGroupSize" min="2" value="5">
+                                <small>Groups smaller than this will be merged</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Live Statistics Mode *</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="liveStatsMode" value="hidden" checked>
+                                    <div class="radio-content">
+                                        <strong>Hidden Until Release</strong>
+                                        <p>Show participation only, no results</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-option">
+                                    <input type="radio" name="liveStatsMode" value="realtime">
+                                    <div class="radio-content">
+                                        <strong>Real-Time</strong>
+                                        <p>Show live aggregate results</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Result Disclosure Policy *</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="resultPolicy" value="public" checked>
+                                    <div class="radio-content">
+                                        <strong>Public</strong>
+                                        <p>Anyone can view results</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-option">
+                                    <input type="radio" name="resultPolicy" value="invite_key">
+                                    <div class="radio-content">
+                                        <strong>Invite Key Required</strong>
+                                        <p>Same key needed to view results</p>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-option">
+                                    <input type="radio" name="resultPolicy" value="private">
+                                    <div class="radio-content">
+                                        <strong>Private</strong>
+                                        <p>Only organizer and voters</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Review & Publish -->
+                    <div class="form-step" data-step="6">
+                        <h2>Review & Publish</h2>
+                        
+                        <div class="review-section">
+                            <h3>Election Summary</h3>
+                            <div id="reviewSummary"></div>
+                        </div>
+                        
+                        <div class="cost-estimate">
+                            <h3>Cost Estimate</h3>
+                            <div id="costBreakdown"></div>
+                        </div>
+                        
+                        <div class="warning-box">
+                            <strong>⚠️ Important:</strong>
+                            <ul>
+                                <li>Election configuration cannot be changed after publishing</li>
+                                <li>You will fund the election with CKB tokens</li>
+                                <li>Unused funds will be returned after the election</li>
+                                <li>Make sure your JoyID wallet is connected and funded</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Form Navigation -->
+                    <div class="form-navigation">
+                        <button type="button" id="prevBtn" onclick="previousStep()" class="btn btn-secondary">
+                            Previous
+                        </button>
+                        <button type="button" id="nextBtn" onclick="nextStep()" class="btn btn-primary">
+                            Next
+                        </button>
+                        <button type="submit" id="publishBtn" style="display: none;" class="btn btn-primary btn-lg">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+                                <path d="M22 4L12 14.01l-3-3"></path>
+                            </svg>
+                            Publish Election
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- My Elections View -->
+            <div id="electionsListView" style="display: none;">
+                <div class="page-header">
+                    <h1>My Elections</h1>
+                    <button onclick="showCreateView()" class="btn btn-primary">Create New</button>
+                </div>
+                
+                <div id="electionsList" class="elections-grid">
+                    <!-- Elections will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Success Modal -->
+            <div id="successModal" class="modal" style="display: none;">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>✓ Election Published!</h2>
+                        <button class="modal-close" onclick="closeSuccessModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="success-message">
+                            <p>Your election has been successfully published to the blockchain.</p>
+                        </div>
+                        
+                        <div class="published-info">
+                            <div class="info-field">
+                                <label>Event ID:</label>
+                                <div class="value" id="publishedEventId">--</div>
+                            </div>
+                            
+                            <div class="info-field">
+                                <label>Voter URL:</label>
+                                <div class="url-display" id="publishedUrl">--</div>
+                                <button onclick="copyToClipboard('publishedUrl')" class="btn-copy">Copy</button>
+                            </div>
+                            
+                            <div class="info-field">
+                                <label>QR Code:</label>
+                                <div id="publishedQRCode"></div>
+                            </div>
+                            
+                            <div id="inviteKeySection" class="info-field" style="display: none;">
+                                <label>Invite Key:</label>
+                                <div class="value" id="publishedInviteKey">--</div>
+                                <button onclick="copyToClipboard('publishedInviteKey')" class="btn-copy">Copy</button>
+                            </div>
+                        </div>
+                        
+                        <div class="modal-actions">
+                            <button onclick="downloadInviteMaterials()" class="btn btn-secondary">
+                                Download Invite Materials
+                            </button>
+                            <button onclick="showMyElections()" class="btn btn-primary">
+                                View My Elections
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 VoteSecure. Privacy-preserving voting on Nervos CKB.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+		
+	<!-- Import Maps polyfill (ok to keep your 1.10.0; 2.x also works) -->
+			
+		<!-- Loader (keep it first) -->
+		<!-- <script async src="https://ga.jspm.io/npm:es-module-shims@2/dist/es-module-shims.js"></script> -->
+		<script async src="https://ga.jspm.io/npm:es-module-shims@2/dist/es-module-shims.js"></script>
+		<script type="importmap">
+		{
+		  "imports": {
+			"@joyid/ckb": "https://esm.sh/@joyid/ckb@1.1.2?bundle&target=es2022&polyfill-node",
+			"@ckb-lumos/lumos": "https://esm.sh/@ckb-lumos/lumos@0.23.0?bundle&target=es2022&polyfill-node"
+		  }
+		}
+		</script>
+
+		<script type="module" src="../src/ckbServiceBridge.js"></script>
+		<script type="module" src="../src/blockchain.js"></script>
+		<script type="module" src="organizer.js"></script>
+
+</body>
+</html>

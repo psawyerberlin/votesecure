@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoteSecure - Privacy-Preserving Blockchain Voting</title>
+    <link rel="stylesheet" href="web/votesecure.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                </svg>
+                <span class="logo-text">VoteSecure</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#security">Security</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-background"></div>
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    Transparent Voting.<br>
+                    <span class="gradient-text">Private Choices.</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Decentralized voting on Nervos CKB blockchain. End-to-end verifiable, 
+                    tamper-evident, and privacy-preserving elections for everyone.
+                </p>
+                <div class="hero-actions">
+                    <a href="web/organizer.html" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                        Create Election
+                    </a>
+                    <a href="web/voter.html" class="btn btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 11l3 3L22 4"></path>
+                            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                        </svg>
+                        Vote Now
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="floating-card card-1">
+                    <div class="card-icon">🔒</div>
+                    <div class="card-text">End-to-End Encrypted</div>
+                </div>
+                <div class="floating-card card-2">
+                    <div class="card-icon">✓</div>
+                    <div class="card-text">Verifiable Results</div>
+                </div>
+                <div class="floating-card card-3">
+                    <div class="card-icon">👥</div>
+                    <div class="card-text">Anonymous Voting</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section features-section">
+        <div class="container">
+            <h2 class="section-title">Why VoteSecure?</h2>
+            <p class="section-subtitle">Built on blockchain. Designed for privacy. Made for everyone.</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Tamper-Evident</h3>
+                    <p>Every ballot recorded on-chain with cryptographic proof. Results cannot be altered after submission.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>Privacy First</h3>
+                    <p>Ballots encrypted client-side. Individual votes never exposed. Only aggregate results revealed.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Independently Auditable</h3>
+                    <p>Verify your ballot's inclusion and recompute tallies yourself. No need to trust anyone.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Gas-Free Voting</h3>
+                    <p>Organizers sponsor all transaction fees. Voters cast ballots without crypto or wallet funds.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Revoting Allowed</h3>
+                    <p>Change your mind before deadline. Only your final ballot counts, with configurable update limits.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Flexible Configuration</h3>
+                    <p>Public polls or private elections. Real-time or delayed results. Group-level or total reporting.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="section how-section">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            
+            <div class="role-tabs">
+                <button class="tab-btn active" data-tab="organizer">For Organizers</button>
+                <button class="tab-btn" data-tab="voter">For Voters</button>
+            </div>
+            
+            <div class="tab-content active" id="organizer">
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Configure Your Election</h3>
+                            <p>Define questions, answer options, eligibility rules, anonymity levels, and result disclosure policies.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Publish & Fund</h3>
+                            <p>Connect JoyID wallet and fund the event. We create on-chain cells for metadata, ballots, and results.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Distribute Invites</h3>
+                            <p>Share the event URL or QR code with invite keys via email, SMS, or in-person.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Release Results</h3>
+                            <p>After the configured time and threshold confirmations, results automatically unlock and decrypt.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="voter">
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Open Event Link</h3>
+                            <p>Click the invitation link or scan QR code to access the voting page.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Connect JoyID</h3>
+                            <p>Authenticate with your JoyID wallet. No funds needed - organizer covers all fees.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Cast Your Ballot</h3>
+                            <p>Make your choices and submit. Your ballot is encrypted before leaving your browser.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Verify & Audit</h3>
+                            <p>Receive a receipt to verify ballot inclusion. After release, audit the final tallies independently.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Section -->
+    <section id="security" class="section security-section">
+        <div class="container">
+            <h2 class="section-title">Security Model</h2>
+            <p class="section-subtitle">Multiple layers of protection for your vote</p>
+            
+            <div class="security-grid">
+                <div class="security-item">
+                    <h4>🔐 Confidentiality</h4>
+                    <p>Client-side encryption with event public keys. Ballots remain confidential until aggregate decryption.</p>
+                </div>
+                <div class="security-item">
+                    <h4>🔗 Integrity</h4>
+                    <p>Immutable on-chain cells record every state change. Frontend code hash committed to prevent tampering.</p>
+                </div>
+                <div class="security-item">
+                    <h4>👤 Anonymity</h4>
+                    <p>K-anonymity enforcement with automatic group merging. Sub-threshold groups protected from de-anonymization.</p>
+                </div>
+                <div class="security-item">
+                    <h4>⏰ Availability</h4>
+                    <p>Threshold-based result release prevents organizer censorship. Anyone can trigger tallying after deadline.</p>
+                </div>
+                <div class="security-item">
+                    <h4>✓ Auditability</h4>
+                    <p>Independent verification of ballot inclusion and tally computation from public blockchain data.</p>
+                </div>
+                <div class="security-item">
+                    <h4>🛡️ Sybil Mitigation</h4>
+                    <p>CAPTCHA, rate limits, email verification, and per-voter keys to reduce automated voting attacks.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Get Started?</h2>
+            <p>Create your first election or participate in ongoing votes</p>
+            <div class="cta-buttons">
+                <a href="web/organizer.html" class="btn btn-primary">Create Election</a>
+                <a href="web/voter.html" class="btn btn-outline">Vote Now</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="nav-brand">
+                        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M9 11l3 3L22 4"></path>
+                            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                        </svg>
+                        <span class="logo-text">VoteSecure</span>
+                    </div>
+                    <p>Privacy-preserving voting on Nervos CKB</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="web/organizer.html">Create Election</a>
+                        <a href="web/voter.html">Vote</a>
+                        <a href="#features">Features</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="#how-it-works">Documentation</a>
+                        <a href="#security">Security</a>
+                        <a href="#">GitHub</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                        <a href="#">Open Source</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 VoteSecure. Open source under MIT License.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(tab).classList.add('active');
+            });
+        });
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
