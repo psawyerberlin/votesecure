@@ -8,6 +8,8 @@ VoteSecure is a decentralized application (dApp) for running transparent, tamper
 
 👤 Author: Patrick Sawyer (psawyer@gmx.net)
 
+🤖 AI assistance: Drafting/editing support with GPT-5 (ChatGPT), Claude and Grok
+
 📄 License: MIT
 
 🔗 Repository: github.com/psawyerberlin/votesecure
@@ -16,4 +18,4 @@ VoteSecure is a decentralized application (dApp) for running transparent, tamper
 
 🎯 Intended Audience: Anyone running, auditing, or participating in secure and verifiable elections or polls.
 
-(See Votesecure_White_Paper.pdf for details)
+(See documentation/Votesecure_White_Paper.pdf for details)
