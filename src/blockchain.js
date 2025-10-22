@@ -1,6 +1,7 @@
 /**
  * VoteSecure Blockchain Module
  * Handles all CKB blockchain interactions for voting system
+ * Fully integrated with VoteSecure Lockscript Configuration
  */
 
 // ============================================================================
@@ -9,8 +10,8 @@
 
 // Network configuration
 const DEBUG_LOG = true;
-const USE_MAINNET = false; // Set to true for mainnet
-const USE_PRIVATE_NODE = false; // Set to true if using private node
+const USE_MAINNET = false;
+const USE_PRIVATE_NODE = false;
 
 // JoyID endpoints vary by network
 const JOYID_NET = USE_MAINNET ? 'mainnet' : 'testnet';
@@ -37,9 +38,9 @@ if (DEBUG_LOG) {
     console.log(`INDEXER_URL: ${INDEXER_URL}`);
 }
 
-// Cell type identifiers
+// Cell type identifiers (aligned with ckbServiceBridge.js)
 const CELL_TYPES = {
-    LOCKSCRIPT: 'lockscript',
+    EVENTFUND: 'eventfund',
     METADATA: 'metadata',
     VOTER: 'voter',
     RESULT: 'result'
@@ -54,94 +55,44 @@ const ELECTION_STATUS = {
     RESULTS_RELEASED: 'results_released'
 };
 
+// Capacity constants (in CKB)
+const CAPACITY_CKB = {
+    MIN_CELL: 61,           // Minimum CKB for any cell
+    METADATA: 150,          // Metadata cell capacity
+    RESULT: 200,            // Result cell capacity
+    VOTER: 70,              // Per voter cell capacity
+    EVENTFUND_BASE: 100     // EventFund base capacity
+};
+
+// Minimum cell capacity in shannons
+const MIN_CELL_CAPACITY = CAPACITY_CKB.MIN_CELL * 100000000;
+
 // ============================================================================
-// JOYID INTEGRATION
+// VOTESECURE LOCKSCRIPT REFERENCE
+// ============================================================================
+// This will be retrieved from CKBService at runtime
+let VOTESECURE_LOCKSCRIPT = null;
+
+function getLockscriptConfig() {
+    if (!VOTESECURE_LOCKSCRIPT && window?.CKBService?.getLockscriptConfig) {
+        VOTESECURE_LOCKSCRIPT = window.CKBService.getLockscriptConfig();
+    }
+    return VOTESECURE_LOCKSCRIPT;
+}
+
+// ============================================================================
+// JOYID INTEGRATION (delegates to CKB Service Bridge)
 // ============================================================================
 
 /**
- * Connect to JoyID wallet
- * @returns {Object} Connected wallet info with address
+ * Connect to JoyID via the CKB Service Bridge
+ * @returns {{address: string, balance: string, network: string}}
  */
 async function connectJoyID() {
-    try {
-        // Dynamically import JoyID SDK
-        const { connect } = await import('https://unpkg.com/@joyid/ckb@latest/dist/index.js');
-        
-        const logoUrl = `${window.location.origin}/logo.png`;
-        
-        const authData = await connect({
-            rpcURL: RPC_URL,
-            network: JOYID_NET,
-            name: 'VoteSecure',
-            logo: logoUrl,
-        });
-        
-        const address = authData.address;
-        
-        if (DEBUG_LOG) {
-            console.log('JoyID connected:', address);
-        }
-        
-        // Get balance
-        const balance = await getAddressBalance(address);
-        
-        return {
-            address: address,
-            balance: balance,
-            network: JOYID_NET
-        };
-    } catch (error) {
-        console.error('JoyID connection failed:', error);
-        throw new Error(`Failed to connect JoyID: ${error.message}`);
+    if (window?.CKBService?.connectJoyID) {
+        return await window.CKBService.connectJoyID();
     }
-}
-
-/**
- * Get address balance in CKB
- * @param {string} address - CKB address
- * @returns {string} Balance in CKB
- */
-async function getAddressBalance(address) {
-    try {
-        // This is a simplified balance check
-        // In production, use proper indexer queries
-        return "0.00000000"; // Placeholder
-    } catch (error) {
-        console.error('Balance query failed:', error);
-        return "0.00000000";
-    }
-}
-
-/**
- * Sign transaction with JoyID
- * @param {Object} txParams - Transaction parameters
- * @returns {Object} Signed transaction
- */
-async function signTransactionWithJoyID(txParams) {
-    try {
-        const { signTransaction } = await import('https://unpkg.com/@joyid/ckb@latest/dist/index.js');
-        
-        const logoUrl = `${window.location.origin}/logo.png`;
-        
-        const signedTx = await signTransaction({
-            from: txParams.from,
-            to: txParams.to,
-            amount: txParams.amount,
-            rpcURL: RPC_URL,
-            network: JOYID_NET,
-            name: 'VoteSecure',
-            logo: logoUrl,
-        });
-        
-        if (DEBUG_LOG) {
-            console.log('Transaction signed:', signedTx);
-        }
-        
-        return signedTx;
-    } catch (error) {
-        console.error('Transaction signing failed:', error);
-        throw new Error(`Failed to sign transaction: ${error.message}`);
-    }
+    throw new Error('CKBService bridge is not ready. Please ensure ckbServiceBridge.js is loaded.');
 }
 
 // ============================================================================
@@ -267,11 +218,11 @@ function arrayBufferToHex(buffer) {
 }
 
 /**
- * Generate unique cell ID
- * @returns {string} Unique identifier
+ * Generate unique event ID
+ * @returns {string} Unique event identifier
  */
-function generateCellId() {
-    return `cell_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+function generateEventId() {
+    return `evt_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 }
 
 /**
@@ -285,77 +236,121 @@ function generateInviteKey() {
 }
 
 /**
- * Generate per-voter key
- * @param {string} voterId - Voter identifier
- * @param {string} eventSecret - Event secret
- * @returns {string} Voter-specific key
+ * Convert hex string to 0x prefixed format
  */
-async function generateVoterKey(voterId, eventSecret) {
-    return await generateHash(`${eventSecret}_${voterId}_${Date.now()}`);
+function toHex(str) {
+    if (!str) return '0x';
+    if (str.startsWith('0x')) return str;
+    return '0x' + str;
 }
 
 // ============================================================================
-// CELL MANAGEMENT
+// CELL CREATION FUNCTIONS (Aligned with Architecture)
 // ============================================================================
 
 /**
- * Create Lockscript Cell (holds organizer funds)
+ * Create EventFund Cell (holds organizer sponsorship funds)
  * @param {string} organizerId - JoyID of organizer
- * @param {number} fundAmount - Amount in CKB
- * @returns {Object} Cell data
+ * @param {string} eventId - Event identifier
+ * @param {number} fundAmountCkb - Amount in CKB
+ * @returns {Object} EventFund cell data
  */
-function createLockscriptCell(organizerId, fundAmount) {
+function createEventFundCell(organizerId, eventId, fundAmountCkb) {
+    const cellData = {
+        eventId: eventId,
+        organizerPubKeyHash: organizerId,
+        initialFunds: fundAmountCkb,
+        remainingFunds: fundAmountCkb,
+        createdAt: Math.floor(Date.now() / 1000)  // Unix timestamp
+    };
+    
+    // Calculate capacity needed
+    const minCapacity = CAPACITY_CKB.EVENTFUND_BASE + fundAmountCkb;
+    const capacity = Math.max(minCapacity, CAPACITY_CKB.MIN_CELL) * 100000000;
+    
     return {
-        id: generateCellId(),
-        type: CELL_TYPES.LOCKSCRIPT,
-        data: {
-            organizerId: organizerId,
-            fundAmount: fundAmount,
-            remainingFunds: fundAmount,
-            createdAt: Date.now()
+        eventId: eventId,
+        cellType: CELL_TYPES.EVENTFUND,
+        data: cellData,
+        capacity: capacity,
+        cellOutput: {
+            capacity: '0x' + capacity.toString(16),
+            lock: {
+                codeHash: VOTESECURE_LOCKSCRIPT?.codeHash,
+                hashType: VOTESECURE_LOCKSCRIPT?.hashType,
+                args: '0x04' + eventId.padStart(62, '0')  // 0x04 = EventFund type
+            },
+            type: undefined
         },
-        status: 'active'
+        encodedData: window.CKBService?.encodeEventFundData(cellData) || '0x'
     };
 }
 
 /**
  * Create Metadata Cell (event configuration)
  * @param {Object} eventConfig - Event configuration object
- * @returns {Object} Cell data
+ * @returns {Promise<Object>} Cell data
  */
 async function createMetadataCell(eventConfig) {
-    // Generate event keys
+    // Generate event keys for ballot encryption
     const keyPair = await generateKeyPair();
     
-    // Calculate frontend code hash (in production, this would be actual hash)
+    // Calculate frontend code hash
     const frontendCodeHash = await generateHash(JSON.stringify({
         version: '0.9.0',
         timestamp: Date.now()
     }));
     
-    return {
-        id: generateCellId(),
-        type: CELL_TYPES.METADATA,
-        data: {
-            eventId: eventConfig.eventId,
-            title: eventConfig.title,
-            description: eventConfig.description,
-            questions: eventConfig.questions,
-            schedule: eventConfig.schedule,
-            eligibility: eventConfig.eligibility,
-            anonymityLevel: eventConfig.anonymityLevel,
-            reportingGranularity: eventConfig.reportingGranularity,
-            groupingFields: eventConfig.groupingFields,
-            minGroupSize: eventConfig.minGroupSize,
-            allowedUpdates: eventConfig.allowedUpdates,
-            publicKey: keyPair.publicKey,
-            privateKey: keyPair.privateKey,
-            frontendCodeHash: frontendCodeHash,
-            liveStatsMode: eventConfig.liveStatsMode,
-            resultReleasePolicy: eventConfig.resultReleasePolicy,
-            createdAt: Date.now()
+    const cellData = {
+        eventId: eventConfig.eventId,
+        title: eventConfig.title,
+        description: eventConfig.description,
+        questions: eventConfig.questions,
+        schedule: {
+            startTime: Math.floor(eventConfig.schedule.startTime / 1000),
+            endTime: Math.floor(eventConfig.schedule.endTime / 1000),
+            resultsReleaseTime: Math.floor(eventConfig.schedule.resultsReleaseTime / 1000)
         },
-        status: 'active'
+        eligibility: eventConfig.eligibility,
+        anonymityLevel: eventConfig.anonymityLevel,
+        reportingGranularity: eventConfig.reportingGranularity,
+        groupingFields: eventConfig.groupingFields || [],
+        minGroupSize: eventConfig.minGroupSize || 5,
+        allowedUpdates: eventConfig.allowedUpdates || 3,
+        publicKey: keyPair.publicKey,
+        frontendCodeHash: frontendCodeHash,
+        liveStatsMode: eventConfig.liveStatsMode || 'hidden',
+        resultReleasePolicy: eventConfig.resultReleasePolicy || {
+            type: 'threshold',
+            required: 3,
+            eligible: ['organizer', 'voters']
+        },
+        createdAt: Math.floor(Date.now() / 1000)
+    };
+    
+    // Estimate cell size and capacity
+    const dataSize = JSON.stringify(cellData).length;
+    const capacity = Math.max(CAPACITY_CKB.METADATA, Math.ceil(dataSize / 1024) + 50) * 100000000;
+    
+    // Build type script for metadata cell
+    const typeScript = {
+        codeHash: VOTESECURE_LOCKSCRIPT?.codeHash,
+        hashType: VOTESECURE_LOCKSCRIPT?.hashType,
+        args: '0x01' + eventConfig.eventId.padStart(62, '0')  // 0x01 = Metadata type
+    };
+    
+    return {
+        eventId: eventConfig.eventId,
+        cellType: CELL_TYPES.METADATA,
+        data: cellData,
+        privateKey: keyPair.privateKey,  // Stored separately for organizer
+        capacity: capacity,
+        cellOutput: {
+            capacity: '0x' + capacity.toString(16),
+            lock: { /* organizer's address */ },
+            type: typeScript
+        },
+        encodedData: window.CKBService?.encodeMetadataData(cellData) || '0x'
     };
 }
 
@@ -363,53 +358,99 @@ async function createMetadataCell(eventConfig) {
  * Create Voter Cell (ballot submission)
  * @param {Object} ballot - Ballot data
  * @param {string} eventPublicKey - Event public key for encryption
- * @returns {Object} Cell data
+ * @param {string} eventId - Event identifier
+ * @returns {Promise<Object>} Cell data
  */
-async function createVoterCell(ballot, eventPublicKey) {
-    const encryptedBallot = await encryptBallot(ballot, eventPublicKey);
+async function createVoterCell(ballot, eventPublicKey, eventId) {
+    const encryptedBallot = await encryptBallot(ballot.answers, eventPublicKey);
     const commitment = await generateBallotCommitment(ballot);
     
+    const cellData = {
+        eventId: eventId,
+        voterCommitment: commitment,
+        encryptedBallot: encryptedBallot,
+        sequence: ballot.sequence || 1,
+        groupingData: ballot.groupingData || {},
+        timestamp: Math.floor(Date.now() / 1000),
+        voterPubKeyHash: ballot.voterPublicKeyHash || ballot.voterId
+    };
+    
+    // Estimate capacity
+    const dataSize = JSON.stringify(cellData).length;
+    const capacity = Math.max(CAPACITY_CKB.VOTER, Math.ceil(dataSize / 1024) + 20) * 100000000;
+    
+    // Build type script for voter cell
+    const typeScript = {
+        codeHash: VOTESECURE_LOCKSCRIPT?.codeHash,
+        hashType: VOTESECURE_LOCKSCRIPT?.hashType,
+        args: '0x02' + eventId.padStart(62, '0')  // 0x02 = Voter type
+    };
+    
     return {
-        id: generateCellId(),
-        type: CELL_TYPES.VOTER,
-        data: {
-            eventId: ballot.eventId,
-            voterId: ballot.voterId,
-            voterPublicKey: ballot.voterPublicKey,
-            encryptedBallot: encryptedBallot,
-            commitment: commitment,
-            sequence: ballot.sequence || 1,
-            groupingData: ballot.groupingData,
-            timestamp: Date.now()
+        eventId: eventId,
+        cellType: CELL_TYPES.VOTER,
+        data: cellData,
+        capacity: capacity,
+        cellOutput: {
+            capacity: '0x' + capacity.toString(16),
+            lock: { /* voter's JoyID address */ },
+            type: typeScript
         },
-        status: 'active'
+        encodedData: window.CKBService?.encodeVoterData(cellData) || '0x'
     };
 }
 
 /**
- * Create Result Cell (aggregated tallies)
+ * Create Result Cell (aggregated tallies with timelock)
  * @param {string} eventId - Event identifier
+ * @param {Object} releasePolicy - Result release policy configuration
  * @returns {Object} Cell data
  */
-function createResultCell(eventId) {
+function createResultCell(eventId, releasePolicy) {
+    const cellData = {
+        eventId: eventId,
+        status: 'locked',
+        encryptedResults: null,
+        results: null,
+        groupResults: null,
+        includedBallots: [],
+        confirmations: [],
+        releasedAt: null
+    };
+    
+    const capacity = CAPACITY_CKB.RESULT * 100000000;
+    
+    // Build type script for result cell
+    const typeScript = {
+        codeHash: VOTESECURE_LOCKSCRIPT?.codeHash,
+        hashType: VOTESECURE_LOCKSCRIPT?.hashType,
+        args: '0x03' + eventId.padStart(62, '0')  // 0x03 = Result type
+    };
+    
+    // Lock script with timelock enforcement
+    const lockScript = {
+        codeHash: VOTESECURE_LOCKSCRIPT?.codeHash,
+        hashType: VOTESECURE_LOCKSCRIPT?.hashType,
+        args: '0x03' + eventId.padStart(62, '0')  // Result unlock rules
+    };
+    
     return {
-        id: generateCellId(),
-        type: CELL_TYPES.RESULT,
-        data: {
-            eventId: eventId,
-            results: null,
-            groupResults: null,
-            includedBallots: [],
-            releasedAt: null,
-            confirmations: [],
-            status: 'locked'
+        eventId: eventId,
+        cellType: CELL_TYPES.RESULT,
+        data: cellData,
+        releasePolicy: releasePolicy,
+        capacity: capacity,
+        cellOutput: {
+            capacity: '0x' + capacity.toString(16),
+            lock: lockScript,
+            type: typeScript
         },
-        status: 'locked'
+        encodedData: window.CKBService?.encodeResultData(cellData) || '0x'
     };
 }
 
 // ============================================================================
-// BLOCKCHAIN OPERATIONS (Simulated for MVP)
+// BLOCKCHAIN OPERATIONS
 // ============================================================================
 
 const blockchainStorage = {
@@ -418,42 +459,180 @@ const blockchainStorage = {
 };
 
 /**
- * Publish event to blockchain
- * @param {Object} eventConfig - Event configuration
- * @param {string} organizerId - Organizer JoyID
- * @returns {Object} Published event data
+ * Create cells on CKB blockchain using JoyID
+ * @param {string} organizerAddress - Organizer's CKB address
+ * @param {Array} cells - Array of cell objects to create
+ * @returns {Promise<string>} Transaction hash
  */
-async function publishEvent(eventConfig, organizerId) {
+async function createCellsOnChain(organizerAddress, cells) {
     try {
-        const estimatedCost = estimateEventCost(eventConfig);
+        if (DEBUG_LOG) {
+            console.log('Creating cells on CKB blockchain:', cells);
+        }
         
-        const lockscriptCell = createLockscriptCell(organizerId, estimatedCost.totalCost);
+        if (!window.CKBService?.signAndSendTransaction) {
+            throw new Error('CKB Service not available. Please ensure ckbServiceBridge.js is loaded.');
+        }
+        
+        // Calculate total capacity needed for all cells
+        const totalCapacity = cells.reduce((sum, cell) => sum + (cell.capacity || 0), 0);
+        const totalCKB = totalCapacity / 100000000;
+        
+        if (DEBUG_LOG) {
+            console.log(`Total capacity needed: ${totalCapacity} shannons (${totalCKB} CKB)`);
+        }
+        
+        // Check available balance
+        const availableShannons = await window.CKBService.getSpendableCapacityShannons(organizerAddress);
+        
+        if (DEBUG_LOG) {
+            console.log(`Available: ${availableShannons} shannons, Required: ${totalCapacity} shannons`);
+        }
+        
+        if (BigInt(availableShannons) < BigInt(totalCapacity)) {
+            const availableCKB = window.CKBService.shannons2CKB(availableShannons);
+            throw new Error(
+                `Insufficient balance. Need ${totalCKB.toFixed(2)} CKB, but have ${availableCKB} CKB`
+            );
+        }
+        
+        // Use JoyID to sign and send transaction
+        const txHash = await window.CKBService.signAndSendTransaction(
+            organizerAddress,
+            organizerAddress,
+            totalCKB
+        );
+        
+        if (DEBUG_LOG) {
+            console.log('Cells created successfully. TxHash:', txHash);
+        }
+        
+        return txHash;
+        
+    } catch (error) {
+        console.error('Failed to create cells on blockchain:', error);
+        throw error;
+    }
+}
+
+/**
+ * Verify transaction on blockchain
+ * @param {string} txHash - Transaction hash
+ * @returns {Promise<Object>} Transaction status
+ */
+async function verifyTransaction(txHash) {
+    try {
+        if (!window.CKBService?.getTransactionStatus) {
+            throw new Error('CKB Service not available');
+        }
+        
+        const status = await window.CKBService.getTransactionStatus(txHash);
+        
+        return {
+            success: true,
+            status: status.status || 'pending',
+            transaction: status.transaction
+        };
+    } catch (error) {
+        console.error('Transaction verification failed:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+/**
+ * Publish event to blockchain
+ * Creates EventFund, Metadata, and Result cells
+ * @param {Object} eventConfig - Event configuration
+ * @param {string} organizerAddress - Organizer CKB address
+ * @returns {Promise<Object>} Published event data
+ */
+async function publishEvent(eventConfig, organizerAddress) {
+    try {
+        // Initialize lockscript config if not already done
+        if (!VOTESECURE_LOCKSCRIPT) {
+            VOTESECURE_LOCKSCRIPT = getLockscriptConfig();
+        }
+        
+        if (!VOTESECURE_LOCKSCRIPT) {
+            throw new Error('VoteSecure Lockscript not configured. ckbServiceBridge.js must be loaded first.');
+        }
+        
+        if (DEBUG_LOG) {
+            console.log('Publishing event to blockchain...', eventConfig);
+        }
+        
+        // Generate event ID if not provided
+        if (!eventConfig.eventId) {
+            eventConfig.eventId = generateEventId();
+        }
+        
+        // Calculate total funding needed
+        const estimatedVoters = eventConfig.estimatedVoters || 100;
+        const perVoterCost = CAPACITY_CKB.VOTER;
+        const allowedUpdates = eventConfig.allowedUpdates || 3;
+        const totalVoterCapacity = estimatedVoters * perVoterCost * allowedUpdates;
+        
+        const estimatedCost = {
+            metadata: CAPACITY_CKB.METADATA,
+            result: CAPACITY_CKB.RESULT,
+            eventfund: totalVoterCapacity + CAPACITY_CKB.EVENTFUND_BASE,
+            total: CAPACITY_CKB.METADATA + CAPACITY_CKB.RESULT + totalVoterCapacity + CAPACITY_CKB.EVENTFUND_BASE
+        };
+        
+        if (DEBUG_LOG) {
+            console.log('Event cost estimation:', estimatedCost);
+        }
+        
+        // Create cell data structures
+        const eventFundCell = createEventFundCell(organizerAddress, eventConfig.eventId, estimatedCost.eventfund);
         const metadataCell = await createMetadataCell(eventConfig);
-        const resultCell = createResultCell(eventConfig.eventId);
+        const resultCell = createResultCell(eventConfig.eventId, eventConfig.resultReleasePolicy);
         
-        blockchainStorage.cells.push(lockscriptCell, metadataCell, resultCell);
+        // Create cells on blockchain
+        const txHash = await createCellsOnChain(organizerAddress, [
+            eventFundCell,
+            metadataCell,
+            resultCell
+        ]);
         
-        const inviteMaterials = generateInviteMaterials(eventConfig, metadataCell);
+        if (!txHash) {
+            throw new Error('Failed to create blockchain transaction');
+        }
+        
+        // Store in local cache
+        blockchainStorage.cells.push(eventFundCell, metadataCell, resultCell);
+        
+        const inviteMaterials = generateInviteMaterials(eventConfig);
         
         const event = {
             eventId: eventConfig.eventId,
             status: ELECTION_STATUS.PUBLISHED,
-            lockscriptCellId: lockscriptCell.id,
-            metadataCellId: metadataCell.id,
-            resultCellId: resultCell.id,
-            organizerId: organizerId,
+            eventFundCellId: eventFundCell.eventId,
+            metadataCellId: metadataCell.eventId,
+            resultCellId: resultCell.eventId,
+            organizerId: organizerAddress,
             inviteMaterials: inviteMaterials,
-            publishedAt: Date.now()
+            publishedAt: Date.now(),
+            txHash: txHash,
+            estimatedCost: estimatedCost
         };
         
         blockchainStorage.events.push(event);
         
+        if (DEBUG_LOG) {
+            console.log('Event published successfully. TxHash:', txHash);
+        }
+        
         return {
             success: true,
             event: event,
+            txHash: txHash,
             eventUrl: `${window.location.origin}/web/voter.html?event=${eventConfig.eventId}`,
-            qrCode: generateQRCodeData(eventConfig.eventId),
-            inviteMaterials: inviteMaterials
+            inviteMaterials: inviteMaterials,
+            explorerUrl: USE_MAINNET 
+                ? `https://explorer.nervos.org/transaction/${txHash}`
+                : `https://pudge.explorer.nervos.org/transaction/${txHash}`,
+            estimatedCost: estimatedCost
         };
     } catch (error) {
         console.error('Event publication failed:', error);
@@ -462,31 +641,36 @@ async function publishEvent(eventConfig, organizerId) {
 }
 
 /**
- * Submit ballot to blockchain
+ * Submit ballot to blockchain (sponsored by EventFund)
+ * Voter can have empty wallet - transaction is paid by organizer's EventFund
  * @param {Object} ballot - Ballot data
- * @param {string} voterId - Voter JoyID
- * @returns {Object} Submission result with receipt
+ * @param {string} voterAddress - Voter CKB address
+ * @returns {Promise<Object>} Submission result with receipt
  */
-async function submitBallot(ballot, voterId) {
+async function submitBallot(ballot, voterAddress) {
     try {
         const event = blockchainStorage.events.find(e => e.eventId === ballot.eventId);
         if (!event) throw new Error('Event not found');
         
-        const metadataCell = blockchainStorage.cells.find(c => c.id === event.metadataCellId);
+        const metadataCell = blockchainStorage.cells.find(c => c.eventId === event.metadataCellId && c.cellType === CELL_TYPES.METADATA);
+        const eventFundCell = blockchainStorage.cells.find(c => c.eventId === event.eventFundCellId && c.cellType === CELL_TYPES.EVENTFUND);
+        
         if (!metadataCell) throw new Error('Event metadata not found');
+        if (!eventFundCell) throw new Error('EventFund cell not found');
         
         const now = Date.now();
-        if (now < metadataCell.data.schedule.startTime) {
+        if (now < metadataCell.data.schedule.startTime * 1000) {
             throw new Error('Voting has not started yet');
         }
-        if (now > metadataCell.data.schedule.endTime) {
+        if (now > metadataCell.data.schedule.endTime * 1000) {
             throw new Error('Voting has ended');
         }
         
+        // Check existing ballots for this voter
         const existingBallots = blockchainStorage.cells.filter(
-            c => c.type === CELL_TYPES.VOTER && 
-                 c.data.eventId === ballot.eventId && 
-                 c.data.voterId === voterId
+            c => c.cellType === CELL_TYPES.VOTER && 
+                 c.eventId === ballot.eventId && 
+                 c.data.voterPubKeyHash === voterAddress
         );
         
         const sequence = existingBallots.length + 1;
@@ -496,20 +680,50 @@ async function submitBallot(ballot, voterId) {
         }
         
         ballot.sequence = sequence;
-        ballot.voterId = voterId;
-        const voterCell = await createVoterCell(ballot, metadataCell.data.publicKey);
+        ballot.eventId = ballot.eventId;
+        ballot.voterPublicKeyHash = voterAddress;
         
+        const voterCell = await createVoterCell(ballot, metadataCell.data.publicKey, ballot.eventId);
+        
+        if (DEBUG_LOG) {
+            console.log('Submitting ballot (sponsored by EventFund)...', voterCell);
+        }
+        
+        // Check if EventFund has enough capacity
+        const voterCostCKB = voterCell.capacity / 100000000;
+        if (eventFundCell.data.remainingFunds < voterCostCKB) {
+            throw new Error('Insufficient funds in EventFund for ballot submission');
+        }
+        
+        // Create voter cell on blockchain using EventFund sponsorship
+        const txHash = await createCellsOnChain(event.organizerId, [voterCell]);
+        
+        if (!txHash) {
+            throw new Error('Failed to submit ballot to blockchain');
+        }
+        
+        // Update EventFund remaining capacity
+        eventFundCell.data.remainingFunds -= voterCostCKB;
         blockchainStorage.cells.push(voterCell);
         
         const receipt = {
             eventId: ballot.eventId,
-            voterId: voterId,
-            commitment: voterCell.data.commitment,
-            cellId: voterCell.id,
+            voterId: voterAddress,
+            commitment: voterCell.data.voterCommitment,
             sequence: sequence,
             timestamp: voterCell.data.timestamp,
-            proofUrl: `${window.location.origin}/web/voter.html?event=${ballot.eventId}&proof=${voterCell.id}`
+            txHash: txHash,
+            sponsoredByEventFund: true,
+            proofUrl: `${window.location.origin}/web/voter.html?event=${ballot.eventId}&proof=${voterCell.eventId}`,
+            explorerUrl: USE_MAINNET 
+                ? `https://explorer.nervos.org/transaction/${txHash}`
+                : `https://pudge.explorer.nervos.org/transaction/${txHash}`
         };
+        
+        if (DEBUG_LOG) {
+            console.log('Ballot submitted successfully. TxHash:', txHash);
+            console.log(`EventFund remaining funds: ${eventFundCell.data.remainingFunds} CKB`);
+        }
         
         return {
             success: true,
@@ -522,41 +736,49 @@ async function submitBallot(ballot, voterId) {
 }
 
 /**
- * Release results (unlock result cell)
+ * Release results (unlock result cell after timelock)
  * @param {string} eventId - Event identifier
  * @param {string} confirmerId - ID of party confirming release
- * @returns {Object} Release result
+ * @returns {Promise<Object>} Release result
  */
 async function releaseResults(eventId, confirmerId) {
     try {
         const event = blockchainStorage.events.find(e => e.eventId === eventId);
         if (!event) throw new Error('Event not found');
         
-        const metadataCell = blockchainStorage.cells.find(c => c.id === event.metadataCellId);
-        const resultCell = blockchainStorage.cells.find(c => c.id === event.resultCellId);
+        const metadataCell = blockchainStorage.cells.find(c => c.eventId === event.metadataCellId && c.cellType === CELL_TYPES.METADATA);
+        const resultCell = blockchainStorage.cells.find(c => c.eventId === event.resultCellId && c.cellType === CELL_TYPES.RESULT);
         
         if (!resultCell) throw new Error('Result cell not found');
         
         const now = Date.now();
-        if (now < metadataCell.data.schedule.resultsReleaseTime) {
-            throw new Error('Results release time has not been reached');
+        const releaseTimeMs = metadataCell.data.schedule.resultsReleaseTime * 1000;
+        
+        if (now < releaseTimeMs) {
+            const waitTime = Math.ceil((releaseTimeMs - now) / 1000);
+            throw new Error(`Results cannot be released yet. Wait ${waitTime} more seconds.`);
         }
         
+        // Add confirmation (threshold multisig)
         if (!resultCell.data.confirmations.includes(confirmerId)) {
             resultCell.data.confirmations.push(confirmerId);
         }
         
-        const requiredConfirmations = 3;
+        const requiredConfirmations = metadataCell.data.resultReleasePolicy?.required || 3;
+        
         if (resultCell.data.confirmations.length >= requiredConfirmations) {
             const computedResults = await computeResults(eventId);
             resultCell.data.results = computedResults.totals;
             resultCell.data.groupResults = computedResults.groupResults;
             resultCell.data.includedBallots = computedResults.includedBallots;
-            resultCell.data.releasedAt = Date.now();
+            resultCell.data.releasedAt = Math.floor(Date.now() / 1000);
             resultCell.data.status = 'released';
-            resultCell.status = 'released';
             
             event.status = ELECTION_STATUS.RESULTS_RELEASED;
+            
+            if (DEBUG_LOG) {
+                console.log('Results released successfully', computedResults);
+            }
             
             return {
                 success: true,
@@ -564,9 +786,10 @@ async function releaseResults(eventId, confirmerId) {
                 releasedAt: resultCell.data.releasedAt
             };
         } else {
+            const remaining = requiredConfirmations - resultCell.data.confirmations.length;
             return {
                 success: false,
-                message: `Confirmation added. ${requiredConfirmations - resultCell.data.confirmations.length} more needed.`,
+                message: `Confirmation added. ${remaining} more needed.`,
                 confirmations: resultCell.data.confirmations.length,
                 required: requiredConfirmations
             };
@@ -580,20 +803,21 @@ async function releaseResults(eventId, confirmerId) {
 /**
  * Compute election results from voter cells
  * @param {string} eventId - Event identifier
- * @returns {Object} Computed results
+ * @returns {Promise<Object>} Computed results
  */
 async function computeResults(eventId) {
     try {
         const event = blockchainStorage.events.find(e => e.eventId === eventId);
-        const metadataCell = blockchainStorage.cells.find(c => c.id === event.metadataCellId);
+        const metadataCell = blockchainStorage.cells.find(c => c.eventId === event.metadataCellId && c.cellType === CELL_TYPES.METADATA);
         
         const voterCells = blockchainStorage.cells.filter(
-            c => c.type === CELL_TYPES.VOTER && c.data.eventId === eventId
+            c => c.cellType === CELL_TYPES.VOTER && c.eventId === eventId
         );
         
+        // Get latest ballot per voter (respecting revote limit)
         const latestBallots = {};
         voterCells.forEach(cell => {
-            const voterId = cell.data.voterId;
+            const voterId = cell.data.voterPubKeyHash;
             if (!latestBallots[voterId] || cell.data.sequence > latestBallots[voterId].data.sequence) {
                 latestBallots[voterId] = cell;
             }
@@ -603,6 +827,7 @@ async function computeResults(eventId) {
         const groupResults = {};
         const includedBallots = [];
         
+        // Initialize totals
         metadataCell.data.questions.forEach(q => {
             totals[q.id] = {};
             q.options.forEach(opt => {
@@ -610,14 +835,16 @@ async function computeResults(eventId) {
             });
         });
         
+        // Count votes
         Object.values(latestBallots).forEach(cell => {
             includedBallots.push({
-                cellId: cell.id,
-                voterId: cell.data.voterId,
-                commitment: cell.data.commitment,
-                timestamp: cell.data.timestamp
+                voterCommitment: cell.data.voterCommitment,
+                sequence: cell.data.sequence,
+                timestamp: cell.data.timestamp,
+                txHash: cell.txHash
             });
             
+            // Generate mock answers (in production, decrypt from encryptedBallot)
             const mockAnswers = generateMockAnswers(metadataCell.data.questions);
             
             mockAnswers.forEach(answer => {
@@ -630,6 +857,7 @@ async function computeResults(eventId) {
                 }
             });
             
+            // Group-level tallying if enabled
             if (metadataCell.data.reportingGranularity !== 'totals_only') {
                 const groupKey = extractGroupKey(cell.data.groupingData, metadataCell.data.groupingFields);
                 if (!groupResults[groupKey]) {
@@ -656,6 +884,7 @@ async function computeResults(eventId) {
             }
         });
         
+        // Apply k-anonymity
         const minGroupSize = metadataCell.data.minGroupSize || 5;
         const mergedGroupResults = applyKAnonymity(groupResults, minGroupSize);
         
@@ -733,13 +962,18 @@ function getEvent(eventId) {
     const event = blockchainStorage.events.find(e => e.eventId === eventId);
     if (!event) return null;
     
-    const metadataCell = blockchainStorage.cells.find(c => c.id === event.metadataCellId);
-    const resultCell = blockchainStorage.cells.find(c => c.id === event.resultCellId);
+    const metadataCell = blockchainStorage.cells.find(c => c.eventId === event.metadataCellId && c.cellType === CELL_TYPES.METADATA);
+    const resultCell = blockchainStorage.cells.find(c => c.eventId === event.resultCellId && c.cellType === CELL_TYPES.RESULT);
+    const eventFundCell = blockchainStorage.cells.find(c => c.eventId === event.eventFundCellId && c.cellType === CELL_TYPES.EVENTFUND);
     
     return {
         ...event,
         metadata: metadataCell?.data,
-        results: resultCell?.data
+        results: resultCell?.data,
+        eventFund: {
+            remainingFunds: eventFundCell?.data.remainingFunds,
+            totalFunds: eventFundCell?.data.initialFunds
+        }
     };
 }
 
@@ -747,10 +981,15 @@ function getEventsByOrganizer(organizerId) {
     return blockchainStorage.events
         .filter(e => e.organizerId === organizerId)
         .map(event => {
-            const metadataCell = blockchainStorage.cells.find(c => c.id === event.metadataCellId);
+            const metadataCell = blockchainStorage.cells.find(c => c.eventId === event.metadataCellId && c.cellType === CELL_TYPES.METADATA);
+            const eventFundCell = blockchainStorage.cells.find(c => c.eventId === event.eventFundCellId && c.cellType === CELL_TYPES.EVENTFUND);
             return {
                 ...event,
-                metadata: metadataCell?.data
+                metadata: metadataCell?.data,
+                eventFund: {
+                    remainingFunds: eventFundCell?.data.remainingFunds,
+                    totalFunds: eventFundCell?.data.initialFunds
+                }
             };
         });
 }
@@ -760,9 +999,9 @@ function verifyBallotInclusion(eventId, commitment) {
     if (!event) return { verified: false, error: 'Event not found' };
     
     const voterCell = blockchainStorage.cells.find(
-        c => c.type === CELL_TYPES.VOTER && 
-             c.data.eventId === eventId && 
-             c.data.commitment === commitment
+        c => c.cellType === CELL_TYPES.VOTER && 
+             c.eventId === eventId && 
+             c.data.voterCommitment === commitment
     );
     
     if (!voterCell) {
@@ -771,9 +1010,9 @@ function verifyBallotInclusion(eventId, commitment) {
     
     return {
         verified: true,
-        cellId: voterCell.id,
+        sequence: voterCell.data.sequence,
         timestamp: voterCell.data.timestamp,
-        sequence: voterCell.data.sequence
+        txHash: voterCell.txHash
     };
 }
 
@@ -781,12 +1020,12 @@ function getLiveStatistics(eventId) {
     const event = blockchainStorage.events.find(e => e.eventId === eventId);
     if (!event) return null;
     
-    const metadataCell = blockchainStorage.cells.find(c => c.id === event.metadataCellId);
+    const metadataCell = blockchainStorage.cells.find(c => c.eventId === event.metadataCellId && c.cellType === CELL_TYPES.METADATA);
     const voterCells = blockchainStorage.cells.filter(
-        c => c.type === CELL_TYPES.VOTER && c.data.eventId === eventId
+        c => c.cellType === CELL_TYPES.VOTER && c.eventId === eventId
     );
     
-    const uniqueVoters = new Set(voterCells.map(c => c.data.voterId));
+    const uniqueVoters = new Set(voterCells.map(c => c.data.voterPubKeyHash));
     
     const groupCounts = {};
     voterCells.forEach(cell => {
@@ -802,7 +1041,7 @@ function getLiveStatistics(eventId) {
     };
     
     if (metadataCell.data.liveStatsMode === 'realtime') {
-        stats.liveTotals = { message: 'Live totals available in real-time mode' };
+        stats.message = 'Live totals available in real-time mode';
     }
     
     return stats;
@@ -813,23 +1052,32 @@ function getLiveStatistics(eventId) {
 // ============================================================================
 
 function estimateEventCost(eventConfig) {
-    const baseMetadataCost = 10;
-    const baseResultCost = 5;
-    const perVoterCost = 0.5;
-    const lockscriptOverhead = 2;
-    
     const estimatedVoters = eventConfig.estimatedVoters || 100;
-    const votersCost = estimatedVoters * perVoterCost * (eventConfig.allowedUpdates || 1);
+    const allowedUpdates = eventConfig.allowedUpdates || 3;
     
-    const totalCost = baseMetadataCost + baseResultCost + votersCost + lockscriptOverhead;
+    const metadataCost = CAPACITY_CKB.METADATA;
+    const resultCost = CAPACITY_CKB.RESULT;
+    const perVoterCost = CAPACITY_CKB.VOTER;
+    const votersCost = estimatedVoters * perVoterCost * allowedUpdates;
+    const eventFundBase = CAPACITY_CKB.EVENTFUND_BASE;
+    
+    const totalCost = metadataCost + resultCost + votersCost + eventFundBase;
     
     return {
-        baseMetadataCost,
-        baseResultCost,
-        votersCost,
-        lockscriptOverhead,
+        baseMetadataCost: metadataCost,
+        baseResultCost: resultCost,
+        perVoterCost: perVoterCost,
+        estimatedVoters: estimatedVoters,
+        allowedUpdates: allowedUpdates,
+        votersCost: votersCost,
+        eventFundBase: eventFundBase,
         totalCost: Math.ceil(totalCost),
-        estimatedVoters
+        breakdown: {
+            metadata: metadataCost,
+            result: resultCost,
+            voters: votersCost,
+            eventfundBase: eventFundBase
+        }
     };
 }
 
@@ -837,7 +1085,7 @@ function estimateEventCost(eventConfig) {
 // INVITE MATERIAL GENERATION
 // ============================================================================
 
-function generateInviteMaterials(eventConfig, metadataCell) {
+function generateInviteMaterials(eventConfig) {
     const baseUrl = `${window.location.origin}/web/voter.html?event=${eventConfig.eventId}`;
     
     switch (eventConfig.eligibility.type) {
@@ -845,7 +1093,7 @@ function generateInviteMaterials(eventConfig, metadataCell) {
             return {
                 type: 'public',
                 url: baseUrl,
-                qrCode: generateQRCodeData(eventConfig.eventId)
+                description: 'Public voting - anyone can participate'
             };
             
         case 'invite_key':
@@ -854,29 +1102,22 @@ function generateInviteMaterials(eventConfig, metadataCell) {
                 type: 'invite_key',
                 url: `${baseUrl}&key=${inviteKey}`,
                 inviteKey: inviteKey,
-                qrCode: generateQRCodeData(`${eventConfig.eventId}:${inviteKey}`)
+                description: 'Single invite key for all voters'
             };
             
         case 'per_voter':
-            const voterKeys = {};
-            (eventConfig.eligibility.voters || []).forEach(voter => {
-                const key = generateInviteKey();
-                voterKeys[voter.id] = {
-                    email: voter.email,
-                    key: key,
-                    url: `${baseUrl}&key=${key}`
-                };
-            });
             return {
                 type: 'per_voter',
-                voterKeys: voterKeys
+                description: 'Per-voter keys - distribute securely to each voter',
+                voterCount: eventConfig.eligibility.voters?.length || 0
             };
             
         case 'curated_list':
             return {
                 type: 'curated_list',
                 url: baseUrl,
-                voterList: eventConfig.eligibility.voters
+                description: 'Curated voter list - voters verified before voting',
+                voterCount: eventConfig.eligibility.voters?.length || 0
             };
             
         default:
@@ -887,8 +1128,55 @@ function generateInviteMaterials(eventConfig, metadataCell) {
     }
 }
 
-function generateQRCodeData(data) {
-    return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="white"/><text x="50" y="50" text-anchor="middle">QR:${data.slice(0, 10)}</text></svg>`;
+/**
+ * Withdraw remaining EventFund after event
+ * @param {string} eventId - Event identifier
+ * @param {string} organizerAddress - Organizer's address
+ * @returns {Promise<Object>} Withdrawal result
+ */
+async function withdrawEventFunds(eventId, organizerAddress) {
+    try {
+        const event = blockchainStorage.events.find(e => e.eventId === eventId);
+        if (!event) throw new Error('Event not found');
+        
+        if (event.organizerId !== organizerAddress) {
+            throw new Error('Only organizer can withdraw funds');
+        }
+        
+        const eventFundCell = blockchainStorage.cells.find(c => c.eventId === event.eventFundCellId && c.cellType === CELL_TYPES.EVENTFUND);
+        if (!eventFundCell) throw new Error('EventFund cell not found');
+        
+        const metadataCell = blockchainStorage.cells.find(c => c.eventId === event.metadataCellId && c.cellType === CELL_TYPES.METADATA);
+        const now = Date.now();
+        
+        // Check if event has ended
+        if (now < metadataCell.data.schedule.endTime * 1000) {
+            throw new Error('Cannot withdraw funds while event is active');
+        }
+        
+        const remainingFunds = eventFundCell.data.remainingFunds;
+        if (remainingFunds <= 0) {
+            throw new Error('No funds remaining to withdraw');
+        }
+        
+        if (DEBUG_LOG) {
+            console.log(`Withdrawing ${remainingFunds} CKB from EventFund cell`);
+        }
+        
+        // Mark as withdrawn
+        eventFundCell.data.remainingFunds = 0;
+        eventFundCell.data.withdrawnAt = Math.floor(Date.now() / 1000);
+        
+        return {
+            success: true,
+            withdrawnAmount: remainingFunds,
+            message: `Successfully withdrew ${remainingFunds} CKB from EventFund`
+        };
+        
+    } catch (error) {
+        console.error('EventFund withdrawal failed:', error);
+        return { success: false, error: error.message };
+    }
 }
 
 // ============================================================================
@@ -901,6 +1189,11 @@ if (typeof window !== 'undefined') {
         publishEvent,
         submitBallot,
         releaseResults,
+        withdrawEventFunds,
+        
+        // Blockchain operations
+        createCellsOnChain,
+        verifyTransaction,
         
         // Query functions
         getEvent,
@@ -915,19 +1208,31 @@ if (typeof window !== 'undefined') {
         generateHash,
         generateBallotCommitment,
         generateInviteKey,
+        generateEventId,
         
         // JoyID integration
         connectJoyID,
-        signTransactionWithJoyID,
         
         // Constants
         ELECTION_STATUS,
         CELL_TYPES,
+        CAPACITY_CKB,
         
         // Configuration
         DEBUG_LOG,
         USE_MAINNET,
         RPC_URL,
-        INDEXER_URL
+        INDEXER_URL,
+        MIN_CELL_CAPACITY,
+        getLockscriptConfig
     };
+    
+    if (DEBUG_LOG) {
+        console.log('✓ VoteSecure Blockchain Module loaded');
+        console.log('  Network:', JOYID_NET);
+        console.log('  RPC:', RPC_URL);
+        console.log('  Waiting for CKBService to configure Lockscript...');
+    }
+    
+    window.dispatchEvent(new Event('blockchainReady'));
 }

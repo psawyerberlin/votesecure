@@ -40,5 +40,6 @@ temp/
 coverage/
 .nyc_output/
 
-#Private notes
+#Private 
+neuronkey.json
 PS_Local_Notes/

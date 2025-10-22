@@ -36,6 +36,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('VoteSecure Organizer initializing...');
     
     // Wait for CKB Service to be ready
+    waitForBlockchainAPI();
+		
+    // Wait for CKB Service to be ready
     waitForCKBService();
     
     // Initialize with one question
@@ -54,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 /**
  * Wait for CKB Service to be available
  */
+
 function waitForCKBService() {
     const checkService = () => {
         if (window.CKBService && typeof window.CKBService.connectJoyID === 'function') {
@@ -74,6 +78,23 @@ function waitForCKBService() {
     };
     
     checkService();
+}
+
+
+function waitForBlockchainAPI() {
+  const check = () => {
+    if (window?.VoteSecureBlockchain?.connectJoyID) {
+      ckbServiceReady = true;
+      console.log('✓ Blockchain API ready');
+      updateServiceStatus('ready');
+      // (optional) auto-reconnect logic here
+    } else {
+      console.log('Waiting for Blockchain API...');
+      updateServiceStatus('loading');
+      setTimeout(check, 100);
+    }
+  };
+  check();
 }
 
 /**
@@ -206,7 +227,10 @@ async function connectWallet() {
         console.log('Initiating JoyID connection...');
         
         // Connect via CKB Service Bridge
-        const walletInfo = await window.CKBService.connectJoyID();
+        //const walletInfo = await window.CKBService.connectJoyID();
+		// Connect via VoteSecureBlockchain (delegates to CKB Service Bridge)
+		const walletInfo = await window.VoteSecureBlockchain.connectJoyID();
+
         
         console.log('JoyID connection successful:', {
             address: formatAddress(walletInfo.address),
@@ -460,7 +484,8 @@ function validateCurrentStep() {
     
     // Step-specific validation
     switch (currentStep) {
-        case 2:
+        case 2:			
+			updateQuestionsConfig();
             if (electionConfig.questions.length === 0) {
                 showNotification('Please add at least one question', 'error');
                 return false;
@@ -517,7 +542,8 @@ function saveStepData(step) {
             break;
             
         case 2:
-            // Questions are saved dynamically
+            // Questions are saved dynamically			
+			updateQuestionsConfig();
             break;
             
         case 3:
@@ -781,15 +807,22 @@ function generateReview() {
             <p>${escapeHtml(electionConfig.title)}</p>
         </div>
         
-        <div class="review-item">
-            <strong>Questions:</strong>
-            <p>${electionConfig.questions.length} question(s)</p>
-            <ul>
-                ${electionConfig.questions.map(q => `
-                    <li>${escapeHtml(q.text)} (${q.type === 'single' ? 'Single' : 'Multiple'} choice, ${q.options.length} options)</li>
-                `).join('')}
-            </ul>
-        </div>
+		  <div class="review-item">
+			<strong>Questions:</strong>
+			<p>${electionConfig.questions.length} question(s)</p>
+			<ol class="review-questions">
+			  ${electionConfig.questions.map((q) => `
+				<li>
+				  <div class="q-header">
+					${escapeHtml(q.text)} <em>(${q.type === 'single' ? 'Single' : 'Multiple'} choice)</em>
+				  </div>
+				  <ul class="option-list">
+					${q.options.map((opt, j) => `<li>${String.fromCharCode(65 + j)}. ${escapeHtml(opt.text)}</li>`).join('')}
+				  </ul>
+				</li>
+			  `).join('')}
+			</ol>
+		  </div>
         
         <div class="review-item">
             <strong>Schedule:</strong>

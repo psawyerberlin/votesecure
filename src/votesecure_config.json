@@ -1,0 +1,24 @@
+{
+  "votesecure_lockscript": {
+    "code_hash": "0x3b3f2d37f03fac4145aeb092d1e925b5624c86b2d7c9717d526be708c9efb6e1",
+    "hash_type": "data",
+    "tx_hash": "0x0ebf65d3adbabb40bae687283b0a51b3dd0fa619e78c890fe0ba516f4eae061f",
+    "out_point": {
+      "tx_hash": "0x0ebf65d3adbabb40bae687283b0a51b3dd0fa619e78c890fe0ba516f4eae061f",
+      "index": "0x0"
+    },
+    "deployed_at": "2025-10-21T00:16:14.394657",
+    "deployed_by": "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqdw2upan53dl6efk64fz6luewp8m6mjffctw548v",
+    "network": "testnet",
+    "binary_size_bytes": 3672,
+    "capacity_shannons": 7100003672,
+    "capacity_ckb": 71.00003672,
+    "rpc_url": "http://192.168.178.94:8112",
+    "indexer_url": "http://192.168.178.94:8112"
+  },
+  "usage_instructions": {
+    "frontend": "Import this config in blockchain.js",
+    "code_hash": "Reference this in Type Scripts for VoteSecure cells",
+    "out_point": "Add as cell dependency in transactions"
+  }
+}

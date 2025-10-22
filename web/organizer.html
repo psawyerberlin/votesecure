@@ -5,179 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Election - VoteSecure</title>
     <link rel="stylesheet" href="votesecure.css">
-    <style>
-        /* Additional styles for JoyID integration */
-        #connectWalletBtn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
-        }
-        
-        #connectWalletBtn.connected {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        }
-        
-        #connectWalletBtn.connected:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-        }
-        
-        #connectWalletBtn.loading {
-            opacity: 0.7;
-            cursor: wait;
-        }
-        
-        #walletInfo {
-            margin-left: 1rem;
-            padding: 0.5rem 1rem;
-            background: rgba(16, 185, 129, 0.1);
-            border-radius: 8px;
-            display: none;
-            animation: slideIn 0.3s ease;
-        }
-        
-        #walletInfo.show {
-            display: block;
-        }
-        
-        .wallet-details {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.9rem;
-        }
-        
-        .wallet-label {
-            color: #6b7280;
-        }
-        
-        .wallet-balance {
-            font-weight: 600;
-            color: #10b981;
-        }
-        
-        .wallet-network {
-            color: #6b7280;
-            font-size: 0.85rem;
-        }
-        
-        .wallet-address {
-            display: flex;
-            align-items: center;
-            gap: 0.25rem;
-            font-family: 'Courier New', monospace;
-            font-size: 0.85rem;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            background: white;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            z-index: 10000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-            max-width: 400px;
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification-success {
-            border-left: 4px solid #10b981;
-        }
-        
-        .notification-error {
-            border-left: 4px solid #ef4444;
-        }
-        
-        .notification-info {
-            border-left: 4px solid #3b82f6;
-        }
-        
-        .notification-warning {
-            border-left: 4px solid #f59e0b;
-        }
-        
-        .spinner-small {
-            display: inline-block;
-            width: 14px;
-            height: 14px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .wallet-disconnect-confirm {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 0.5rem;
-            padding: 1rem;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 100;
-        }
-        
-        .wallet-disconnect-confirm.show {
-            display: block;
-        }
-        
-        .disconnect-buttons {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-        
-        /* Service status indicator */
-        .service-status {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 0.25rem;
-        }
-        
-        .service-status.ready {
-            background: #10b981;
-        }
-        
-        .service-status.error {
-            background: #ef4444;
-        }
-        
-        .service-status.loading {
-            background: #f59e0b;
-            animation: pulse 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-    </style>
 </head>
 <body class="organizer-page">
     <!-- Navigation -->
@@ -604,25 +431,28 @@
         </div>
     </footer>
 
-    <!-- Scripts -->
-		
-	<!-- Import Maps polyfill (ok to keep your 1.10.0; 2.x also works) -->
-			
-		<!-- Loader (keep it first) -->
-		<!-- <script async src="https://ga.jspm.io/npm:es-module-shims@2/dist/es-module-shims.js"></script> -->
-		<script async src="https://ga.jspm.io/npm:es-module-shims@2/dist/es-module-shims.js"></script>
-		<script type="importmap">
-		{
-		  "imports": {
-			"@joyid/ckb": "https://esm.sh/@joyid/ckb@1.1.2?bundle&target=es2022&polyfill-node",
-			"@ckb-lumos/lumos": "https://esm.sh/@ckb-lumos/lumos@0.23.0?bundle&target=es2022&polyfill-node"
-		  }
-		}
-		</script>
+    <!-- Scripts: Load in correct order -->
+    <!-- 1. ES Module Shims (for import maps support) -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@2/dist/es-module-shims.js"></script>
+    
+    <!-- 2. Import Map (defines module locations) -->
+    <script type="importmap">
+    {
+      "imports": {
+        "@joyid/ckb": "https://esm.sh/@joyid/ckb@1.1.2?bundle&target=es2022&polyfill-node",
+        "@ckb-lumos/lumos": "https://esm.sh/@ckb-lumos/lumos@0.23.0?bundle&target=es2022&polyfill-node"
+      }
+    }
+    </script>
 
-		<script type="module" src="../src/ckbServiceBridge.js"></script>
-		<script type="module" src="../src/blockchain.js"></script>
-		<script type="module" src="organizer.js"></script>
+    <!-- 3. CKB Service Bridge (ES Module) - Must load first -->
+    <script type="module" src="../src/ckbServiceBridge.js"></script>
+    
+    <!-- 4. Blockchain Module (Regular script, wraps in IIFE) -->
+    <script src="../src/blockchain.js"></script>
+    
+    <!-- 5. Organizer Script (Regular script, uses globals) -->
+    <script src="organizer.js"></script>
 
 </body>
 </html>

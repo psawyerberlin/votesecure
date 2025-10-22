@@ -1,0 +1,22 @@
+[package]
+name = "votesecure-lockscript"
+version = "0.9.0"
+authors = ["Patrick Sawyer"]
+edition = "2021"
+
+[profile.release]
+overflow-checks = true
+opt-level = "z"
+lto = true
+panic = "abort"
+
+[dependencies]
+# Don't use ckb-std as it requires C compiler
+# Use core blockchain primitives only
+
+[features]
+default = []
+
+# Build configuration to avoid C compiler
+[build-dependencies]
+# None needed

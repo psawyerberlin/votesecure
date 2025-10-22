@@ -821,6 +821,13 @@ a:hover {
     margin-bottom: 1.5rem;
 }
 
+.review-questions {
+    margin-bottom: 1.5rem;
+	list-style-position: inside;
+	padding-left: 0;
+}
+
+
 .review-item strong {
     display: block;
     margin-bottom: 0.5rem;
@@ -1579,3 +1586,177 @@ a:hover {
         gap: 0.5rem;
     }
 }
+
+/* ===========================================================
+   JoyID / Wallet UI (Organizer page)
+   Scoped so it only affects the organizer page
+   =========================================================== */
+.organizer-page #connectWalletBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.organizer-page #connectWalletBtn.connected {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+.organizer-page #connectWalletBtn.connected:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+.organizer-page #connectWalletBtn.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.organizer-page #walletInfo {
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
+  display: none;
+  animation: slideIn 0.3s ease;
+}
+.organizer-page #walletInfo.show { display: block; }
+
+.organizer-page .wallet-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+.organizer-page .wallet-label { color: #6b7280; }
+.organizer-page .wallet-balance { font-weight: 600; color: #10b981; }
+.organizer-page .wallet-network { color: #6b7280; font-size: 0.85rem; }
+.organizer-page .wallet-address {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+}
+
+/* Notifications */
+.organizer-page .notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  z-index: 10000;
+  transform: translateX(400px);
+  transition: transform 0.3s ease;
+  max-width: 400px;
+}
+.organizer-page .notification.show { transform: translateX(0); }
+.organizer-page .notification-success { border-left: 4px solid #10b981; }
+.organizer-page .notification-error   { border-left: 4px solid #ef4444; }
+.organizer-page .notification-info    { border-left: 4px solid #3b82f6; }
+.organizer-page .notification-warning { border-left: 4px solid #f59e0b; }
+
+/* Disconnect popover */
+.organizer-page .wallet-disconnect-confirm {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 100;
+}
+.organizer-page .wallet-disconnect-confirm.show { display: block; }
+.organizer-page .disconnect-buttons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Service status dots */
+.organizer-page .service-status {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.25rem;
+}
+.organizer-page .service-status.ready   { background: #10b981; }
+.organizer-page .service-status.error   { background: #ef4444; }
+.organizer-page .service-status.loading { background: #f59e0b; animation: pulse 1.5s ease-in-out infinite; }
+
+/* Animations — note: `spin` already exists in your CSS; don't duplicate it */
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.5; }
+}
+
+/* ===========================================================
+   JoyID / Wallet UI (Voter page)
+   Scoped so it only affects the voter page
+   =========================================================== */
+.voter-page #connectWalletBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.voter-page #connectWalletBtn.connected {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+.voter-page #connectWalletBtn.connected:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+.voter-page #connectWalletBtn.loading {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.voter-page #walletInfo {
+  margin-right: 1rem;
+  padding: 0.5rem 1rem;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 8px;
+  display: none;
+  animation: slideIn 0.3s ease;
+}
+.voter-page #walletInfo.show { display: block; }
+
+.voter-page .wallet-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+.voter-page .wallet-label { color: #6b7280; }
+.voter-page .wallet-network { 
+  font-weight: 600; 
+  color: #10b981;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Service status dots for voter page */
+.voter-page .service-status {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.25rem;
+  transition: all 0.3s ease;
+}
+.voter-page .service-status.ready   { background: #10b981; box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+.voter-page .service-status.error   { background: #ef4444; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+.voter-page .service-status.loading { background: #f59e0b; animation: pulse 1.5s ease-in-out infinite; }

@@ -17,6 +17,8 @@
   "author": "VoteSecure Team",
   "license": "MIT",
   "dependencies": {
+    "@ckb-lumos/common-scripts": "^0.24.0-next.2",
+    "@ckb-lumos/helpers": "^0.24.0-next.2",
     "@ckb-lumos/lumos": "^0.24.0-next.2",
     "@joyid/ckb": "^1.1.2",
     "@nervosnetwork/ckb-sdk-core": "^0.109.0",

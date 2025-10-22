@@ -1,0 +1,9 @@
+[[cells]]
+name = "votesecure_lockscript"
+enable_type_id = false
+location = { file = "votesecure_lockscript.bin" }
+
+[lock]
+code_hash = "0x9bd7e06f3ecf4be0f2fcd2188b23f1b9fcc88e5d4b65a8637b17723bbda3cce8"
+args = "0xae5703d9d22dfeb29b6aa916bfccb827deb724a7"
+hash_type = "type"
