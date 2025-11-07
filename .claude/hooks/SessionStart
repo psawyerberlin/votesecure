@@ -1,0 +1,39 @@
+#!/bin/bash
+#
+# Session Start Hook for VoteSecure
+# This hook runs automatically when Claude Code starts a new session
+# It ensures the development environment is ready for code changes and testing
+
+set -e  # Exit on error
+
+echo "🚀 Setting up VoteSecure development environment..."
+
+# Check if node_modules exists
+if [ ! -d "node_modules" ]; then
+    echo "📦 Installing dependencies (node_modules not found)..."
+    npm install
+    echo "✅ Dependencies installed successfully"
+else
+    echo "✅ Dependencies already installed"
+fi
+
+# Check if package-lock.json is up to date
+if [ -f "package.json" ] && [ -f "package-lock.json" ]; then
+    if [ "package.json" -nt "package-lock.json" ]; then
+        echo "⚠️  package.json is newer than package-lock.json"
+        echo "📦 Running npm install to update dependencies..."
+        npm install
+    fi
+fi
+
+echo ""
+echo "✨ VoteSecure development environment ready!"
+echo ""
+echo "📝 Available commands:"
+echo "   npm start     - Start dev server on port 8080 and open browser"
+echo "   npm run dev   - Start dev server on port 8080"
+echo ""
+echo "🌐 Dev server will be available at: http://localhost:8080"
+echo ""
+echo "💡 Tip: Keep 'npm run dev' running in a separate terminal while I make changes"
+echo ""
