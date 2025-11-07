@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Election - VoteSecure</title>
-    <link rel="stylesheet" href="votesecure.css">
+	<link rel="stylesheet" href="common.css">
+	<link rel="stylesheet" href="organizer.css">
 </head>
 <body class="organizer-page">
     <!-- Navigation -->
@@ -82,18 +83,18 @@
                         
                         <div class="form-group">
                             <label for="electionTitle">Election Title *</label>
-                            <input type="text" id="electionTitle" required placeholder="e.g., Annual Board Election 2025">
+                            <input type="text" id="electionTitle" required placeholder="e.g., Annual Board Election 2025" value="Title Test">  <!-- ### remove Value -->
                         </div>
                         
-                        <div class="form-group">
-                            <label for="electionDescription">Description</label>
-                            <textarea id="electionDescription" rows="4" placeholder="Describe the purpose and context of this election (Markdown supported)"></textarea>
-                            <small>Supports Markdown formatting. HTML tags are sanitized.</small>
-                        </div>
+						<div class="form-group">
+							<label for="electionDescription">Description</label>
+							<textarea id="electionDescription" rows="4" placeholder="Describe the purpose and context of this election (Markdown supported)">Description Test</textarea>  <!-- ### remove Description Test -->
+							<small>Supports Markdown formatting. HTML tags are sanitized.</small>
+						</div>
                         
                         <div class="form-group">
                             <label for="estimatedVoters">Estimated Number of Voters *</label>
-                            <input type="number" id="estimatedVoters" required min="1" value="100">
+                            <input type="number" id="estimatedVoters" required min="1" value="10"> <!-- ### set to 100 -->
                             <small>Used to estimate blockchain costs</small>
                         </div>
                     </div>
@@ -362,17 +363,69 @@
                 </form>
             </div>
 
-            <!-- My Elections View -->
-            <div id="electionsListView" style="display: none;">
-                <div class="page-header">
-                    <h1>My Elections</h1>
-                    <button onclick="showCreateView()" class="btn btn-primary">Create New</button>
-                </div>
-                
-                <div id="electionsList" class="elections-grid">
-                    <!-- Elections will be loaded here -->
-                </div>
-            </div>
+			<!-- My Elections View -->
+			<div id="electionsListView" style="display: none;">
+				<div class="page-header">
+					<h1>My Elections</h1>
+					<div class="page-actions">
+						<!-- Refresh -->
+						<button onclick="loadMyEventsFromBlockchain(currentOrganizer?.address)" 
+								class="btn btn-secondary" 
+								title="Reload from cache">
+							🔄 Refresh
+						</button>
+						
+						<!-- Recovery dropdown -->
+						<div class="dropdown" style="position: relative; display: inline-block;">
+							<button class="btn btn-secondary" onclick="toggleRecoveryMenu(event)">
+								🔧 Recovery ▼
+							</button>
+							<div class="dropdown-menu" id="recoveryMenu" 
+								 style="display: none; position: absolute; top: 100%; right: 0; 
+										background: white; border: 1px solid #ddd; border-radius: 4px;
+										box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 200px;
+										margin-top: 5px; z-index: 1000;">
+								<button onclick="showRecoverDialog(); event.stopPropagation();" 
+										style="display: block; width: 100%; padding: 10px 16px; 
+											   text-align: left; background: none; border: none;
+											   cursor: pointer; color: #333;">
+									➕ Add by Event ID
+								</button>
+								<hr style="margin: 5px 0; border-top: 1px solid #e0e0e0;">
+								<button onclick="exportElectionIds(); event.stopPropagation();" 
+										style="display: block; width: 100%; padding: 10px 16px;
+											   text-align: left; background: none; border: none;
+											   cursor: pointer; color: #333;">
+									💾 Export Backup
+								</button>
+								<button onclick="importElectionIds(); event.stopPropagation();" 
+										style="display: block; width: 100%; padding: 10px 16px;
+											   text-align: left; background: none; border: none;
+											   cursor: pointer; color: #333;">
+									📥 Import Backup
+								</button>
+							</div>
+						</div>
+						
+						<!-- Create new -->
+						<button onclick="showCreateView()" class="btn btn-primary">
+							➕ Create New
+						</button>
+					</div>
+				</div>
+				
+				<!-- Info banner -->
+				<div style="background: #e3f2fd; border-left: 4px solid #2196f3; 
+							padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
+					<strong>💡 Tip:</strong> Elections are saved in your browser. 
+					If an election is missing, use <strong>Recovery → Add by Event ID</strong>.
+				</div>
+				
+				<!-- Elections list -->
+				<div id="electionsList" class="elections-list">
+					<p>Loading elections...</p>
+				</div>
+			</div>
 
             <!-- Success Modal -->
             <div id="successModal" class="modal" style="display: none;">
@@ -427,32 +480,41 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; VoteSecure. Privacy-preserving voting on Nervos CKB.</p>
+            <p>&copy; <a href="../index.html" class="footer-link">VoteSecure</a>. Privacy-preserving voting on Nervos CKB.</p>
         </div>
     </footer>
 
-    <!-- Scripts: Load in correct order -->
-    <!-- 1. ES Module Shims (for import maps support) -->
-    <script async src="https://ga.jspm.io/npm:es-module-shims@2/dist/es-module-shims.js"></script>
-    
-    <!-- 2. Import Map (defines module locations) -->
-    <script type="importmap">
-    {
-      "imports": {
-        "@joyid/ckb": "https://esm.sh/@joyid/ckb@1.1.2?bundle&target=es2022&polyfill-node",
-        "@ckb-lumos/lumos": "https://esm.sh/@ckb-lumos/lumos@0.23.0?bundle&target=es2022&polyfill-node"
-      }
-    }
-    </script>
+	<!-- =============================================  -->
+    <!-- ========== Connection to Services ===========  -->
+	<!-- =============================================  -->
+	
+	<script type="importmap">
+	{
+	  "imports": {
+		"@ckb-ccc/connector-react": "https://esm.sh/@ckb-ccc/connector-react@0.0.14?bundle&target=es2022"
+	  }
+	}
+	</script>
 
-    <!-- 3. CKB Service Bridge (ES Module) - Must load first -->
-    <script type="module" src="../src/ckbServiceBridge.js"></script>
-    
-    <!-- 4. Blockchain Module (Regular script, wraps in IIFE) -->
-    <script src="../src/blockchain.js"></script>
-    
-    <!-- 5. Organizer Script (Regular script, uses globals) -->
-    <script src="organizer.js"></script>
+	<script type="module" src="../src/ckbService_ccc.js"></script>
+	<script src="organizer.js"></script>
+
+	<script>
+	function toggleRecoveryMenu(event) {
+		event.stopPropagation();
+		const menu = document.getElementById('recoveryMenu');
+		const isVisible = menu.style.display === 'block';
+		menu.style.display = isVisible ? 'none' : 'block';
+	}
+
+	// Close dropdown when clicking outside
+	document.addEventListener('click', function(event) {
+		const menu = document.getElementById('recoveryMenu');
+		if (menu && menu.style.display === 'block') {
+			menu.style.display = 'none';
+		}
+	});
+	</script>
 
 </body>
 </html>

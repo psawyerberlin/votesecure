@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vote - VoteSecure</title>
-    <link rel="stylesheet" href="votesecure.css">
+	<link rel="stylesheet" href="common.css">
+	<link rel="stylesheet" href="voter.css">
 </head>
 <body class="voter-page">
     <!-- Navigation -->
@@ -20,6 +21,7 @@
                 </a>
             </div>
             <div class="nav-actions">
+				<a href="viewElectionDetails.html" class="btn btn-sm btn-secondary">View Election Details</a>
                 <div id="walletInfo"></div>
                 <button id="connectWalletBtn" class="btn btn-sm btn-primary">
                     <span class="service-status loading"></span>
@@ -243,7 +245,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2025 VoteSecure. Privacy-preserving elections on Nervos CKB. <a href="#" class="footer-link">White Paper</a></p>
+            <p>&copy; <a href="../index.html" class="footer-link">VoteSecure</a>. Privacy-preserving voting on Nervos CKB.</p>
         </div>
     </footer>
 
@@ -255,19 +257,16 @@
     <script type="importmap">
     {
       "imports": {
-        "@joyid/ckb": "https://esm.sh/@joyid/ckb@1.1.2?bundle&target=es2022&polyfill-node",
-        "@ckb-lumos/lumos": "https://esm.sh/@ckb-lumos/lumos@0.23.0?bundle&target=es2022&polyfill-node"
+        "@ckb-ccc/core": "https://cdn.jsdelivr.net/npm/@ckb-ccc/core/dist/index.mjs",
+        "@ckb-ccc/connector-react": "https://cdn.jsdelivr.net/npm/@ckb-ccc/connector-react/dist/index.mjs"
       }
     }
     </script>
 
-    <!-- 3. CKB Service Bridge (ES Module) - Must load first -->
-    <script type="module" src="../src/ckbServiceBridge.js"></script>
+    <!-- 3. CKB Service with CCC (ES Module) - Uses JoyID with CCC library -->
+    <script type="module" src="../src/ckbService_ccc.js"></script>
     
-    <!-- 4. Blockchain Module (Regular script, wraps in IIFE) -->
-    <script src="../src/blockchain.js"></script>
-    
-    <!-- 5. Voter Script (Regular script, uses globals) -->
+    <!-- 4. Voter Script (Regular script, uses globals) -->
     <script src="voter.js"></script>
 
 </body>

@@ -7,14 +7,14 @@
       "tx_hash": "0x0ebf65d3adbabb40bae687283b0a51b3dd0fa619e78c890fe0ba516f4eae061f",
       "index": "0x0"
     },
-    "deployed_at": "2025-10-21T00:16:14.394657",
+    "deployed_at": "2025-10-23T13:51:04.731668",
     "deployed_by": "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqdw2upan53dl6efk64fz6luewp8m6mjffctw548v",
     "network": "testnet",
     "binary_size_bytes": 3672,
     "capacity_shannons": 7100003672,
     "capacity_ckb": 71.00003672,
-    "rpc_url": "http://192.168.178.94:8112",
-    "indexer_url": "http://192.168.178.94:8112"
+    "rpc_url": "https://testnet.ckb.dev/rpc",
+    "indexer_url": "https://testnet.ckb.dev/indexer"
   },
   "usage_instructions": {
     "frontend": "Import this config in blockchain.js",
@@ -22,3 +22,17 @@
     "out_point": "Add as cell dependency in transactions"
   }
 }
+
+0x0100000000006576745f313736323239383838393530305f3664626f7930696670
+0x  03000000006576745f313736323239383838393530305f3664626f7930696670
+
+Searching cells with lock args: 0x0100000000006576745f313736323338333330313639335f6f6637676e306b6c6e                                
+								0x0100000000006576745f313736323338333330313639335f6f6637676e306b6c6e
+
+List of Election
+2025/11/05 00:30:13: evt_1762298889500_6dboy0ifp (event not found)
+2025/11/05 00:36:45: evt_1762299295844_hgvzl69jk (event not found)
+2025/11/05 00:46:56: evt_1762299855301_11xr18yre (event not found)
+2025/11/05 13:18:45: evt_1762326922549_i4fnzfkvo (event not found)
+2025/11/05 23:56:12: evt_1762383301693_of7gn0kln
+2025/11/06 00:19:39: evt_1762384650555_ph1bhklcn

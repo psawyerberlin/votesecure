@@ -7,14 +7,14 @@
       "tx_hash": "0x0ebf65d3adbabb40bae687283b0a51b3dd0fa619e78c890fe0ba516f4eae061f",
       "index": "0x0"
     },
-    "deployed_at": "2025-10-21T00:16:14.394657",
+    "deployed_at": "2025-10-23T13:51:04.731668",
     "deployed_by": "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqdw2upan53dl6efk64fz6luewp8m6mjffctw548v",
     "network": "testnet",
     "binary_size_bytes": 3672,
     "capacity_shannons": 7100003672,
     "capacity_ckb": 71.00003672,
-    "rpc_url": "http://192.168.178.94:8112",
-    "indexer_url": "http://192.168.178.94:8112"
+    "rpc_url": "https://testnet.ckb.dev/rpc",
+    "indexer_url": "https://testnet.ckb.dev/indexer"
   },
   "usage_instructions": {
     "frontend": "Import this config in blockchain.js",

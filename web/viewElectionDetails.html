@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election Details - VoteSecure</title>
+    <link rel="stylesheet" href="common.css">
+    <link rel="stylesheet" href="viewElectionDetails.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="../index.html">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                    </svg>
+                    <span class="logo-text">VoteSecure</span>
+                </a>
+            </div>
+            <div class="nav-actions">
+                <a href="organizer.html" class="btn btn-sm btn-secondary">Organizer Dashboard</a>
+                <a href="voter.html" class="btn btn-sm btn-primary">Vote</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading election details...</p>
+            </div>
+
+            <!-- Election ID Input (shown if no eventId in URL) -->
+            <div id="electionIdInput" class="election-id-input-section" style="display: none;">
+                <h2>View Election Details</h2>
+                <p>Enter an election ID to view its details</p>
+                <form id="electionIdForm" class="election-id-form">
+                    <div class="form-group">
+                        <label for="electionIdInputField">Election ID:</label>
+                        <input 
+                            type="text" 
+                            id="electionIdInputField" 
+                            placeholder="Paste the election ID"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg">Load Election</button>
+                </form>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="error-state" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <h2>Election Not Found</h2>
+                <p id="errorMessage">Unable to load election details. Please check the election ID.</p>
+                <div class="action-buttons">
+                    <button onclick="showElectionIdInput()" class="btn btn-secondary">Try Another ID</button>
+                    <a href="../index.html" class="btn btn-primary">Go Home</a>
+                </div>
+            </div>
+
+            <!-- Election Details -->
+            <div id="electionDetails" class="details-container" style="display: none;">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; <a href="../index.html" class="footer-link">VoteSecure</a>. Privacy-preserving voting on Nervos CKB.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@2/dist/es-module-shims.js"></script>
+    
+    <script type="importmap">
+    {
+      "imports": {
+        "@ckb-ccc/core": "https://cdn.jsdelivr.net/npm/@ckb-ccc/core/dist/index.mjs",
+        "@ckb-ccc/connector-react": "https://cdn.jsdelivr.net/npm/@ckb-ccc/connector-react/dist/index.mjs"
+      }
+    }
+    </script>
+
+    <script type="module" src="../src/ckbService_ccc.js"></script>
+    <script src="viewElectionDetails.js"></script>
+</body>
+</html>

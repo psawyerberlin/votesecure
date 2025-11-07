@@ -18,7 +18,7 @@ from ecdsa.util import sigencode_der
 
 # Network Configuration
 USE_MAINNET = False  # Set to True for mainnet deployment
-USE_PRIVATE_NODE = True  # Set to True if using your own CKB node
+USE_PRIVATE_NODE = False  # Set to True if using your own CKB node
 
 # Neuron Wallet Configuration
 wallet_path = "neuronkey.json"

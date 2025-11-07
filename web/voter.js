@@ -6,13 +6,18 @@
  */
 
 // ============================================================================
+// CONFIGURATION
+// ============================================================================
+
+const DEBUG_LOG = true;
+
+// ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
 
 let currentEvent = null;
 let currentVoter = null;
 let currentReceipt = null;
-let blockchainReady = false;
 let ckbServiceReady = false;
 
 // ============================================================================
@@ -23,7 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('VoteSecure Voter Interface initializing...');
     
     // Wait for CKB Service to be ready
-    waitForBlockchainAPI();
     waitForCKBService();
     
     // Setup event listeners early so wallet button works
@@ -52,40 +56,22 @@ function waitForCKBService() {
     const checkService = () => {
         if (window.CKBService && typeof window.CKBService.connectJoyID === 'function') {
             ckbServiceReady = true;
-            console.log('✓ CKB Service ready');
+            if (DEBUG_LOG) console.log('✓ CKB Service ready');
             updateServiceStatus('ready');
             
             // Auto-reconnect if session exists
             const savedAddress = sessionStorage.getItem('joyid_address');
-            if (savedAddress) {
+            if (savedAddress && DEBUG_LOG) {
                 console.log('Found previous session, attempting reconnect...');
             }
         } else {
-            console.log('Waiting for CKB Service...');
+            if (DEBUG_LOG) console.log('Waiting for CKB Service...');
             updateServiceStatus('loading');
             setTimeout(checkService, 100);
         }
     };
     
     checkService();
-}
-
-/**
- * Wait for Blockchain API to be available
- */
-function waitForBlockchainAPI() {
-    const check = () => {
-        if (window?.VoteSecureBlockchain?.connectJoyID) {
-            ckbServiceReady = true;
-            console.log('✓ Blockchain API ready');
-            updateServiceStatus('ready');
-        } else {
-            console.log('Waiting for Blockchain API...');
-            updateServiceStatus('loading');
-            setTimeout(check, 100);
-        }
-    };
-    check();
 }
 
 /**
@@ -232,16 +218,18 @@ async function connectWallet() {
             btnText.innerHTML = 'Connecting...';
         }
         
-        console.log('Initiating JoyID connection...');
+        if (DEBUG_LOG) console.log('Initiating JoyID connection...');
         
-        // Connect via VoteSecureBlockchain (delegates to CKB Service Bridge)
-        const walletInfo = await window.VoteSecureBlockchain.connectJoyID();
+        // Connect via CKB Service with CCC + JoyID
+        const walletInfo = await window.CKBService.connectJoyID();
         
-        console.log('JoyID connection successful:', {
-            address: truncateAddress(walletInfo.address),
-            balance: walletInfo.balance,
-            network: walletInfo.network
-        });
+        if (DEBUG_LOG) {
+            console.log('JoyID connection successful:', {
+                address: truncateAddress(walletInfo.address),
+                balance: walletInfo.balance,
+                network: walletInfo.network
+            });
+        }
         
         currentVoter = walletInfo.address;
         
@@ -253,7 +241,7 @@ async function connectWallet() {
         // Update UI - this adds 'connected' class and changes button color
         updateWalletUI(true);
         
-        console.log('✓ Wallet connected successfully');
+        if (DEBUG_LOG) console.log('✓ Wallet connected successfully');
         
         // Hide wallet connection prompt, show voting interface
         const walletRequired = document.getElementById('walletRequired');
@@ -385,14 +373,12 @@ async function loadElection(eventId) {
         document.getElementById('walletRequired').style.display = 'none';
         document.getElementById('electionIdInput').style.display = 'none';
         
-        // Use service to fetch election
-        const service = window.CKBService || window.VoteSecureBlockchain;
-        
-        if (!service || !service.getEvent) {
-            throw new Error('Service does not have getEvent method');
+        // Use CKB Service to fetch election from blockchain
+        if (!window.CKBService || !window.CKBService.getEvent) {
+            throw new Error('CKB Service not ready');
         }
         
-        const event = await service.getEvent(eventId);
+        const event = await window.CKBService.getEvent(eventId);
         
         if (!event) {
             showError('Election not found. Please check your invitation link.');
@@ -400,7 +386,7 @@ async function loadElection(eventId) {
         }
         
         currentEvent = event;
-        console.log('✓ Election loaded:', event);
+        if (DEBUG_LOG) console.log('✓ Election loaded:', event);
         
         // Render election UI
         renderElectionHeader();
@@ -411,7 +397,7 @@ async function loadElection(eventId) {
         const savedAddress = sessionStorage.getItem('joyid_address');
         if (savedAddress) {
             currentVoter = savedAddress;
-            updateWalletStatus(savedAddress);
+            updateWalletUI(true);
             document.getElementById('votingInterface').style.display = 'block';
             document.getElementById('walletRequired').style.display = 'none';
         } else {
@@ -555,6 +541,8 @@ async function handleBallotSubmission(event) {
     }
     
     try {
+        if (DEBUG_LOG) console.log('=== BALLOT SUBMISSION STARTED ===');
+        
         // Collect ballot answers
         const ballot = {
             eventId: currentEvent.eventId,
@@ -562,6 +550,12 @@ async function handleBallotSubmission(event) {
             groupingData: {},
             timestamp: Math.floor(Date.now() / 1000)
         };
+        
+        if (DEBUG_LOG) {
+            console.log('Event ID:', currentEvent.eventId);
+            console.log('Voter address:', currentVoter);
+            console.log('Timestamp:', ballot.timestamp);
+        }
         
         // Collect question answers
         currentEvent.questions.forEach((question, idx) => {
@@ -583,22 +577,32 @@ async function handleBallotSubmission(event) {
             });
         }
         
-        console.log('Submitting ballot:', ballot);
-        
-        // Submit ballot via service
-        const service = window.CKBService || window.VoteSecureBlockchain;
-        if (!service || !service.submitBallot) {
-            throw new Error('Service does not have submitBallot method');
+        if (DEBUG_LOG) {
+            console.log('Ballot answers:', ballot.answers);
+            console.log('Ballot grouping data:', ballot.groupingData);
+            console.log('Submitting ballot to CKB Service...');
         }
         
-        const receipt = await service.submitBallot(ballot, currentVoter);
-        console.log('✓ Ballot submitted:', receipt);
+        // Submit ballot via CKB Service
+        if (!window.CKBService || !window.CKBService.submitBallot) {
+            throw new Error('CKB Service not ready');
+        }
+        
+        const receipt = await window.CKBService.submitBallot(ballot, currentVoter);
+        
+        if (DEBUG_LOG) {
+            console.log('✓ Ballot submitted successfully');
+            console.log('Receipt:', receipt);
+        }
         
         currentReceipt = receipt;
         showReceiptModal(receipt);
         
     } catch (error) {
-        console.error('Ballot submission failed:', error);
+        console.error('=== BALLOT SUBMISSION FAILED ===');
+        console.error('Error:', error);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
         showError(`Failed to submit ballot: ${error.message}`);
     }
 }
@@ -679,12 +683,11 @@ async function handleVerification(event) {
             return;
         }
         
-        const service = window.CKBService || window.VoteSecureBlockchain;
-        if (!service || !service.verifyBallot) {
-            throw new Error('Service does not have verifyBallot method');
+        if (!window.CKBService || !window.CKBService.verifyBallot) {
+            throw new Error('Ballot verification not yet implemented');
         }
         
-        const result = await service.verifyBallot(currentEvent.eventId, commitmentHash);
+        const result = await window.CKBService.verifyBallot(currentEvent.eventId, commitmentHash);
         
         const resultDiv = document.getElementById('verificationResult');
         if (result.included) {
@@ -778,12 +781,31 @@ function showResults() {
 /**
  * Check if there's a previous wallet connection in session
  */
-function checkPreviousConnection() {
-    const savedAddress = sessionStorage.getItem('joyid_address');
-    if (savedAddress) {
-        console.log('Found previous session:', truncateAddress(savedAddress));
-        currentVoter = savedAddress;
-        updateWalletUI(true);
+async function checkPreviousConnection() {
+    try {
+        // Check CKB Service for existing JoyID session
+        if (!window.CKBService || !window.CKBService.checkJoyIDSession) {
+            if (DEBUG_LOG) console.log('CKB Service not ready for session check');
+            return;
+        }
+        
+        const session = await window.CKBService.checkJoyIDSession();
+        
+        if (session && session.address) {
+            if (DEBUG_LOG) console.log('Found previous session:', truncateAddress(session.address));
+            currentVoter = session.address;
+            
+            // Update session storage with latest data
+            sessionStorage.setItem('joyid_address', session.address);
+            sessionStorage.setItem('joyid_balance', session.balance);
+            sessionStorage.setItem('joyid_network', session.network);
+            
+            updateWalletUI(true);
+        } else {
+            if (DEBUG_LOG) console.log('No previous session found');
+        }
+    } catch (error) {
+        console.error('Error checking previous connection:', error);
     }
 }
 

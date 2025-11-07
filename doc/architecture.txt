@@ -5,6 +5,7 @@ votesecure/
 ├─ src/
 │  └─ blockchain.js
 │  └─ ckbServiceBridge.js
+│  └─ votesecure_config.json
 
 ├─ web/
 │  ├─ voter.html

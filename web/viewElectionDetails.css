@@ -1,0 +1,402 @@
+/**
+ * VoteSecure Election Details Page Styles
+ * Import common.css first
+ */
+
+@import url('common.css');
+
+/* ============================================================================
+   ELECTION DETAILS PAGE
+   ============================================================================ */
+
+.details-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+}
+
+/* Details Sections */
+.details-section {
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.details-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.details-section h4 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Details Header (Title + Status) */
+.details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    gap: 1rem;
+}
+
+.details-header h3 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+    font-weight: 600;
+    flex: 1;
+}
+
+.details-description {
+    margin-top: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #667eea;
+}
+
+.details-description p {
+    margin: 0;
+    color: #555;
+    line-height: 1.6;
+}
+
+/* Details Grid */
+.details-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail-item strong {
+    color: #666;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-item span,
+.detail-item code {
+    color: #333;
+    font-size: 15px;
+}
+
+.detail-item code {
+    background: #f5f5f5;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    word-break: break-all;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.detail-item code:hover {
+    background: #e8e8e8;
+}
+
+.explorer-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.explorer-link:hover {
+    color: #764ba2;
+    text-decoration: underline;
+}
+
+/* Questions Display */
+.question-item {
+    background: #f8f9fa;
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    border-left: 4px solid #667eea;
+}
+
+.question-item:last-child {
+    margin-bottom: 0;
+}
+
+.question-title {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.question-type {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 12px;
+    font-style: italic;
+}
+
+.question-options {
+    margin-top: 8px;
+}
+
+.question-options strong {
+    color: #666;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.question-options ul {
+    margin: 8px 0 0 0;
+    padding-left: 20px;
+}
+
+.question-options li {
+    margin-bottom: 4px;
+    color: #333;
+}
+
+/* Results Display */
+.results-pending {
+    padding: 24px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.results-pending p {
+    margin: 8px 0;
+    color: #856404;
+}
+
+.results-released {
+    background: #d4edda;
+    border: 1px solid #28a745;
+    border-radius: 6px;
+    padding: 16px;
+}
+
+.results-header {
+    margin: 0 0 16px 0;
+    color: #155724;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.result-item {
+    background: white;
+    padding: 16px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.result-item:last-child {
+    margin-bottom: 0;
+}
+
+.result-item h5 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* Result Bars */
+.result-bar-container {
+    margin-bottom: 16px;
+}
+
+.result-bar-container:last-child {
+    margin-bottom: 0;
+}
+
+.result-bar-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.option-name {
+    font-weight: 500;
+    color: #333;
+    font-size: 14px;
+}
+
+.vote-count {
+    font-size: 13px;
+    color: #666;
+    font-weight: 600;
+}
+
+.result-bar-track {
+    height: 32px;
+    background: #e0e0e0;
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+}
+
+.result-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 16px;
+    transition: width 0.6s ease-out;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 12px;
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    min-width: 40px;
+}
+
+/* Voter Link Section */
+.voter-link-section {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.voter-link-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    background: #f8f9fa;
+    color: #333;
+}
+
+.voter-link-input:focus {
+    outline: none;
+    border-color: #667eea;
+    background: white;
+}
+
+/* No Data State */
+.no-data {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    padding: 24px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+/* Election ID Input */
+.election-id-input-section {
+    max-width: 600px;
+    margin: 3rem auto;
+    text-align: center;
+}
+
+.election-id-input-section h2 {
+    margin-bottom: 1rem;
+}
+
+.election-id-input-section p {
+    color: var(--gray);
+    margin-bottom: 2rem;
+}
+
+.election-id-form {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--dark);
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-family: monospace;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid var(--border);
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .details-container {
+        padding: 1.5rem;
+    }
+    
+    .details-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .details-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .voter-link-section {
+        flex-direction: column;
+    }
+    
+    .voter-link-input {
+        width: 100%;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons .btn {
+        width: 100%;
+    }
+}
