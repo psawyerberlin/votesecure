@@ -30,6 +30,34 @@
   cursor: wait;
 }
 
+/* Wallet Info Display */
+#walletInfo {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#walletInfo.show {
+  opacity: 1;
+}
+
+.wallet-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.wallet-network {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray);
+  padding: 0.25rem 0.5rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
 /* ============================================================================
    VOTING INTERFACE
    ============================================================================ */
@@ -121,16 +149,31 @@
     font-size: 0.95rem;
 }
 
-.options-container {
+/* Question styling */
+.question-group {
+    margin-bottom: 2rem;
+}
+
+.question-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 1rem;
+    display: block;
+}
+
+/* Options container */
+.options {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
 }
 
-.option-label {
+/* Individual option item */
+.option-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 1rem;
     padding: 1rem;
     border: 2px solid var(--border);
     border-radius: var(--radius-sm);
@@ -138,19 +181,26 @@
     transition: var(--transition);
 }
 
-.option-label:hover {
+.option-item:hover {
     border-color: var(--primary);
     background: rgba(99, 102, 241, 0.05);
 }
 
-.option-label input[type="radio"],
-.option-label input[type="checkbox"] {
+.option-item input[type="radio"],
+.option-item input[type="checkbox"] {
     width: 20px;
     height: 20px;
     cursor: pointer;
+    flex-shrink: 0;
 }
 
-.option-label input:checked + span {
+.option-item label {
+    cursor: pointer;
+    margin: 0;
+    flex-grow: 1;
+}
+
+.option-item input:checked ~ label {
     font-weight: 600;
     color: var(--primary);
 }

@@ -31,6 +31,45 @@
   cursor: wait;
 }
 
+/* Wallet Info Display */
+#walletInfo {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+#walletInfo.show {
+  opacity: 1;
+}
+
+.wallet-details {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.wallet-label {
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.wallet-balance {
+  font-weight: 600;
+  color: var(--success);
+}
+
+.wallet-network {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray);
+  padding: 0.25rem 0.5rem;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
 
 /* ============================================================================
    FORMS
@@ -357,6 +396,29 @@
     margin-bottom: 1.5rem;
     list-style-position: inside;
     padding-left: 0;
+}
+
+.review-questions .q-header {
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+}
+
+.review-questions .q-header em {
+    font-weight: normal;
+    color: var(--gray);
+    font-size: 0.9rem;
+}
+
+.review-questions .option-list {
+    margin-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+    color: var(--gray);
+}
+
+.review-questions .option-list li {
+    margin-bottom: 0.25rem;
 }
 
 .review-item strong {

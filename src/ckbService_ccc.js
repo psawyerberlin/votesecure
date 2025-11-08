@@ -34,6 +34,18 @@ const VOTESECURE_CONFIG = {
   }
 };
 
+console.log('=== CKB SERVICE CONFIG ===');
+console.log('USE_MAINNET:', USE_MAINNET);
+console.log('USE_PRIVATE_NODE:', USE_PRIVATE_NODE);
+console.log('RPC_URL:', RPC_URL);
+console.log('INDEXER_URL:', INDEXER_URL);
+console.log('Lockscript CodeHash:', VOTESECURE_CONFIG.lockscript.codeHash);
+console.log('Lockscript HashType:', VOTESECURE_CONFIG.lockscript.hashType);
+console.log('Lockscript OutPoint:', VOTESECURE_CONFIG.lockscript.outPoint);
+console.log('Lockscript OutPoint TxHash:', VOTESECURE_CONFIG.lockscript.outPoint.txHash);
+console.log('Lockscript OutPoint Index:', VOTESECURE_CONFIG.lockscript.outPoint.index);
+console.log('========================');
+
 if (DEBUG_LOG) {
   console.log('VoteSecure LockScript Config loaded:', VOTESECURE_CONFIG);
 }
@@ -277,18 +289,18 @@ async function getSpendableCapacityShannons(address) {
   try {
     const client = initCCC();
     const script = await ccc.Address.fromString(address, client).getScript();
-    
+
     let balance = BigInt(0);
     for await (const cell of client.findCellsByLock(script, "0x", true)) {
       if (!cell.cellOutput.type && (cell.outputData === "0x" || !cell.outputData)) {
         balance += BigInt(cell.cellOutput.capacity);
       }
     }
-    
+
     if (DEBUG_LOG) {
       console.log(`Spendable capacity: ${shannons2CKB(balance)} CKB`);
     }
-    
+
     return balance;
   } catch (error) {
     console.error('Failed to get balance:', error);
@@ -299,7 +311,7 @@ async function getSpendableCapacityShannons(address) {
 async function getCellsByAddress(address) {
   try {
     const client = initCCC();
-    const { script } = await ccc.Address.fromString(address, client);
+    const script = await ccc.Address.fromString(address, client).getScript();
     
     const cells = [];
     for await (const cell of client.findCellsByLock(script, "0x", true)) {
@@ -442,20 +454,56 @@ async function createCellsWithSignRaw(fromAddress, cellOutputs) {
     if (DEBUG_LOG) console.log('Building transaction with CCC...');
     
     // Complete inputs by capacity - CCC will automatically find and add input cells
-    if (DEBUG_LOG) console.log('Adding inputs to cover capacity...');
+    if (DEBUG_LOG) {
+      console.log('Adding inputs to cover capacity...');
+      console.log('CellDeps BEFORE completeInputsByCapacity:', tx.cellDeps.length);
+      tx.cellDeps.forEach((dep, idx) => {
+        console.log(`  [${idx}] ${dep.outPoint.txHash.slice(0, 10)}... (${dep.depType})`);
+      });
+    }
     await tx.completeInputsByCapacity(signer);
+    if (DEBUG_LOG) {
+      console.log('CellDeps AFTER completeInputsByCapacity:', tx.cellDeps.length);
+      tx.cellDeps.forEach((dep, idx) => {
+        console.log(`  [${idx}] ${dep.outPoint.txHash.slice(0, 10)}... (${dep.depType})`);
+      });
+
+      console.log('Input cells added:');
+      tx.inputs.forEach((input, idx) => {
+        console.log(`  Input [${idx}]:`);
+        console.log(`    From: ${input.previousOutput.txHash.slice(0, 10)}...`);
+        console.log(`    Index: ${input.previousOutput.index}`);
+        console.log(`    Lock codeHash: ${input.cellOutput?.lock?.codeHash}`);
+        console.log(`    Lock hashType: ${input.cellOutput?.lock?.hashType}`);
+        console.log(`    Lock args: ${input.cellOutput?.lock?.args}`);
+        console.log(`    Capacity: ${input.cellOutput?.capacity ? shannons2CKB(input.cellOutput.capacity) : 'unknown'} CKB`);
+      });
+    }
     
     // Complete fee - CCC will automatically calculate and add fee
     if (DEBUG_LOG) console.log('Calculating and adding transaction fee...');
+
     // TEMPORARY: Fee rate increased to 3000 to avoid rejection
     // WARNING: This makes VOTERS pay fees, which violates white paper!
     // Proper implementation: EventFund cell should pay all fees
     // See ARCHITECTURE_FEE_ISSUE.md for details
     await tx.completeFeeBy(signer, 3000);
-    
+
+    if (DEBUG_LOG) {
+      console.log('CellDeps AFTER completeFeeBy:', tx.cellDeps.length);
+      tx.cellDeps.forEach((dep, idx) => {
+        console.log(`  [${idx}] ${dep.outPoint.txHash.slice(0, 10)}... (${dep.depType})`);
+      });
+    }
+
     // Log complete transaction details
     if (DEBUG_LOG) {
       console.log('=== COMPLETE TRANSACTION DETAILS ===');
+      console.log('Total cellDeps:', tx.cellDeps.length);
+      console.log('CellDeps details:');
+      tx.cellDeps.forEach((dep, idx) => {
+        console.log(`  [${idx}] txHash: ${dep.outPoint.txHash}, index: ${dep.outPoint.index}, depType: ${dep.depType}`);
+      });
       console.log('Transaction object:', {
         version: tx.version,
         cellDeps: tx.cellDeps.map(dep => ({
@@ -504,7 +552,15 @@ async function createCellsWithSignRaw(fromAddress, cellOutputs) {
     }
     
     // Sign and send transaction using JoyID signer
-    if (DEBUG_LOG) console.log('Signing and sending transaction with JoyID...');
+    if (DEBUG_LOG) {
+      console.log('=== FINAL CHECK BEFORE SENDING ===');
+      console.log('CellDeps count:', tx.cellDeps.length);
+      tx.cellDeps.forEach((dep, idx) => {
+        console.log(`  [${idx}] ${dep.outPoint.txHash.slice(0, 10)}... index:${dep.outPoint.index} (${dep.depType})`);
+      });
+      console.log('Signing and sending transaction with JoyID...');
+    }
+
     const txHash = await signer.sendTransaction(tx);
     
     if (DEBUG_LOG) {

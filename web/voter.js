@@ -424,20 +424,37 @@ async function loadElection(eventId) {
  */
 function renderElectionHeader() {
     if (!currentEvent) return;
-    
+
     document.getElementById('electionTitle').textContent = currentEvent.title || 'Election';
-    
+
     if (currentEvent.description) {
         document.getElementById('electionDescription').innerHTML = `<p>${currentEvent.description}</p>`;
     }
-    
-    document.getElementById('electionStatus').textContent = currentEvent.status === 'active' ? 'Active' : 'Concluded';
-    
+
+    // Update election status with appropriate styling
+    const statusEl = document.getElementById('electionStatus');
+    const status = currentEvent.status || 'pending';
+
+    // Remove all status classes
+    statusEl.classList.remove('status-active', 'status-ended', 'status-pending');
+
+    // Set text and add appropriate class
+    if (status === 'active') {
+        statusEl.textContent = 'Active';
+        statusEl.classList.add('status-active');
+    } else if (status === 'concluded' || status === 'ended') {
+        statusEl.textContent = 'Concluded';
+        statusEl.classList.add('status-ended');
+    } else {
+        statusEl.textContent = 'Pending';
+        statusEl.classList.add('status-pending');
+    }
+
     if (currentEvent.endTime) {
         const date = new Date(currentEvent.endTime * 1000);
         document.getElementById('electionEndTime').textContent = date.toLocaleString();
     }
-    
+
     if (currentEvent.participantCount !== undefined) {
         document.getElementById('participantCount').textContent = currentEvent.participantCount;
     }
@@ -448,29 +465,60 @@ function renderElectionHeader() {
  */
 function renderQuestions() {
     if (!currentEvent || !currentEvent.questions) return;
-    
+
     const container = document.getElementById('questionsContainer');
     container.innerHTML = '';
-    
+
+    if (DEBUG_LOG) {
+        console.log('=== RENDERING QUESTIONS ===');
+        console.log('Total questions:', currentEvent.questions.length);
+    }
+
     currentEvent.questions.forEach((question, idx) => {
+        if (DEBUG_LOG) {
+            console.log(`Question ${idx + 1}:`, {
+                text: question.text,
+                type: question.type,
+                multiSelect: question.multiSelect,
+                options: question.options?.length
+            });
+        }
+
         const questionDiv = document.createElement('div');
         questionDiv.className = 'question-group';
-        
+
         const questionLabel = document.createElement('label');
         questionLabel.className = 'question-label';
         questionLabel.textContent = question.text || `Question ${idx + 1}`;
         questionDiv.appendChild(questionLabel);
-        
+
+        // Add question type hint
+        const questionType = document.createElement('div');
+        questionType.className = 'question-type-hint';
+        const isMultipleChoice = question.type === 'multiple' || question.multiSelect === true;
+        questionType.textContent = isMultipleChoice ?
+            '(Select one or more options)' :
+            '(Select one option)';
+        questionType.style.fontSize = '0.875rem';
+        questionType.style.color = 'var(--gray)';
+        questionType.style.marginBottom = '0.75rem';
+        questionDiv.appendChild(questionType);
+
+        if (DEBUG_LOG) {
+            console.log(`Question ${idx + 1} is multiple choice:`, isMultipleChoice);
+        }
+
         const optionsDiv = document.createElement('div');
         optionsDiv.className = 'options';
-        
+
         question.options.forEach((option) => {
             const optionDiv = document.createElement('div');
             optionDiv.className = 'option-item';
-            
+
             const inputId = `option_${idx}_${option.id}`;
             const input = document.createElement('input');
-            input.type = question.multiSelect ? 'checkbox' : 'radio';
+            // Check both question.type and question.multiSelect for multiple choice
+            input.type = (question.type === 'multiple' || question.multiSelect === true) ? 'checkbox' : 'radio';
             input.id = inputId;
             input.name = `question_${idx}`;
             input.value = option.id;
@@ -558,14 +606,44 @@ async function handleBallotSubmission(event) {
         }
         
         // Collect question answers
+        let validationErrors = [];
         currentEvent.questions.forEach((question, idx) => {
             const groupName = `question_${idx}`;
             const inputs = document.querySelectorAll(`input[name="${groupName}"]:checked`);
-            
+            const isMultipleChoice = question.type === 'multiple' || question.multiSelect === true;
+
+            if (DEBUG_LOG) {
+                console.log(`Question ${idx + 1} (${question.text}):`, {
+                    type: question.type,
+                    isMultipleChoice: isMultipleChoice,
+                    selectedCount: inputs.length,
+                    selectedValues: Array.from(inputs).map(i => i.value)
+                });
+            }
+
+            // Validation: single-choice should have exactly 1 answer
+            if (!isMultipleChoice && inputs.length > 1) {
+                validationErrors.push(`Question ${idx + 1}: Multiple selections not allowed for single choice question`);
+            }
+
+            // Validation: at least one answer required
+            if (inputs.length === 0) {
+                validationErrors.push(`Question ${idx + 1}: Please select at least one option`);
+            }
+
             if (inputs.length > 0) {
                 ballot.answers[question.id] = Array.from(inputs).map(i => i.value);
             }
         });
+
+        // Check for validation errors
+        if (validationErrors.length > 0) {
+            if (DEBUG_LOG) {
+                console.error('Validation errors:', validationErrors);
+            }
+            showError('Please answer all questions:\n' + validationErrors.join('\n'));
+            return;
+        }
         
         // Collect grouping data if present
         if (currentEvent.groupingFields) {
@@ -578,8 +656,11 @@ async function handleBallotSubmission(event) {
         }
         
         if (DEBUG_LOG) {
-            console.log('Ballot answers:', ballot.answers);
-            console.log('Ballot grouping data:', ballot.groupingData);
+            console.log('=== BALLOT COLLECTED ===');
+            console.log('Complete ballot object:', ballot);
+            console.log('Answers by question:', ballot.answers);
+            console.log('Grouping data:', ballot.groupingData);
+            console.log('========================');
             console.log('Submitting ballot to CKB Service...');
         }
         

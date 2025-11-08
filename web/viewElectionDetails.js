@@ -23,15 +23,24 @@ let ckbServiceReady = false;
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (DEBUG_LOG) console.log('VoteSecure Election Details initializing...');
-    
-    // Get event ID from URL parameter
+    if (DEBUG_LOG) {
+        console.log('=== VOTESECURE ELECTION DETAILS VIEWER ===');
+        console.log('Initializing...');
+        console.log('DEBUG_LOG enabled');
+    }
+
+    // Get event ID from URL parameter (support both 'event' and 'eventId')
     const urlParams = new URLSearchParams(window.location.search);
-    currentEventId = urlParams.get('eventId');
-    
+    currentEventId = urlParams.get('event') || urlParams.get('eventId');
+
+    if (DEBUG_LOG) {
+        console.log('URL Parameters:', window.location.search);
+        console.log('Event ID from URL:', currentEventId || '(none)');
+    }
+
     // Setup form handler
     setupEventIdForm();
-    
+
     // Wait for CKB Service
     waitForCKBService();
 });
@@ -90,25 +99,54 @@ async function loadElectionDetails(eventId) {
     try {
         hideAllSections();
         document.getElementById('loadingState').style.display = 'block';
-        
-        if (DEBUG_LOG) console.log('Fetching details for:', eventId);
+
+        if (DEBUG_LOG) {
+            console.log('=== LOADING ELECTION DETAILS ===');
+            console.log('Event ID:', eventId);
+            console.log('Fetching from blockchain...');
+        }
         
         // Fetch complete event data from blockchain
         const event = await window.CKBService.getEvent(eventId);
         
         if (!event) {
+            if (DEBUG_LOG) console.error('❌ Event not found on blockchain');
             showError('Election not found on blockchain');
             return;
         }
         
-        if (DEBUG_LOG) console.log('Event details:', event);
-        
+        if (DEBUG_LOG) {
+            console.log('=== EVENT DETAILS RETRIEVED ===');
+            console.log('Full event object:', event);
+            console.log('Event ID:', event.eventId);
+            console.log('Title:', event.title);
+            console.log('Status:', event.status);
+            console.log('Metadata:', event.metadata);
+            console.log('Eligibility:', event.eligibility);
+            console.log('Metadata eligibility:', event.metadata?.eligibility);
+            console.log('Schedule:', event.schedule);
+            console.log('Questions:', event.questions);
+            console.log('Event Fund:', event.eventFund);
+            console.log('Cells:', event.cells);
+            console.log('Result:', event.result);
+            console.log('===============================');
+        }
+
         currentEvent = event;
         displayElectionDetails(event);
         
     } catch (error) {
+        if (DEBUG_LOG) {
+            console.error('=== ERROR LOADING ELECTION DETAILS ===');
+            console.error('Error object:', error);
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+            console.error('=====================================');
+        }
         console.error('Failed to load election details:', error);
         showError('Failed to load election details: ' + error.message);
+    } finally {
+        document.getElementById('loadingState').style.display = 'none';
     }
 }
 
@@ -117,35 +155,80 @@ async function loadElectionDetails(eventId) {
 // ============================================================================
 
 function displayElectionDetails(event) {
+    if (DEBUG_LOG) {
+        console.log('=== DISPLAYING ELECTION DETAILS ===');
+        console.log('Rendering HTML for event:', event.eventId);
+    }
+
     hideAllSections();
-    
+
     const container = document.getElementById('electionDetails');
     container.innerHTML = generateElectionDetailsHTML(event);
     container.style.display = 'block';
+
+    if (DEBUG_LOG) {
+        console.log('✓ Election details displayed successfully');
+    }
 }
 
 function generateElectionDetailsHTML(event) {
     const metadata = event.metadata || {};
     const result = event.result || {};
     const eventFund = event.eventFund || {};
-    
+
+    // Get eligibility from either event.eligibility or event.metadata.eligibility
+    const eligibility = event.eligibility || metadata.eligibility || {};
+
+    if (DEBUG_LOG) {
+        console.log('=== GENERATING ELECTION DETAILS HTML ===');
+        console.log('Eligibility data:', eligibility);
+        console.log('Eligibility type:', eligibility.type);
+        console.log('Eligibility mode:', eligibility.mode);
+        console.log('Eligibility voters:', eligibility.voters);
+    }
+
     // Format dates
-    const createdDate = metadata.createdAt ? 
+    const createdDate = metadata.createdAt ?
         new Date(metadata.createdAt * 1000).toLocaleString() : 'Unknown';
-    const startDate = event.schedule?.startTime ? 
+    const startDate = event.schedule?.startTime ?
         new Date(event.schedule.startTime * 1000).toLocaleString() : 'Not set';
-    const endDate = event.schedule?.endTime ? 
+    const endDate = event.schedule?.endTime ?
         new Date(event.schedule.endTime * 1000).toLocaleString() : 'Not set';
-    const resultsReleaseDate = event.schedule?.resultReleaseTime ? 
+    const resultsReleaseDate = event.schedule?.resultReleaseTime ?
         new Date(event.schedule.resultReleaseTime * 1000).toLocaleString() : 'Not set';
-    
+
     // Status badge
-    const statusClass = event.status === 'active' ? 'status-active' : 
+    const statusClass = event.status === 'active' ? 'status-active' :
                        event.status === 'ended' ? 'status-ended' : 'status-pending';
-    
+
     // Transaction info
     const txHash = event.cells?.metadata?.outPoint?.txHash;
     const blockNumber = event.cells?.metadata?.blockNumber;
+
+    // Format eligibility display
+    let eligibilityDisplay = 'Not configured';
+    if (eligibility.type) {
+        const type = eligibility.type;
+        if (type === 'open') {
+            eligibilityDisplay = 'Open (Anyone can vote)';
+        } else if (type === 'whitelist' || type === 'voter_list') {
+            const voterCount = eligibility.voters?.length || 0;
+            eligibilityDisplay = `Whitelist (${voterCount} registered voters)`;
+        } else if (type === 'token_holder') {
+            eligibilityDisplay = `Token Holder (${eligibility.tokenType || 'Unknown token'})`;
+        } else if (type === 'nft_holder') {
+            eligibilityDisplay = `NFT Holder (${eligibility.nftCollection || 'Unknown collection'})`;
+        } else {
+            eligibilityDisplay = type.charAt(0).toUpperCase() + type.slice(1).replace('_', ' ');
+        }
+    } else if (eligibility.mode) {
+        eligibilityDisplay = eligibility.mode.charAt(0).toUpperCase() + eligibility.mode.slice(1).replace('_', ' ');
+    }
+
+    if (DEBUG_LOG) {
+        console.log('Formatted eligibility display:', eligibilityDisplay);
+        console.log('======================================');
+    }
     
     // Build HTML sections
     return `
@@ -203,7 +286,7 @@ function generateElectionDetailsHTML(event) {
             <div class="details-grid">
                 <div class="detail-item">
                     <strong>Eligibility:</strong>
-                    <span>${metadata.eligibility?.mode || 'Not configured'}</span>
+                    <span>${eligibilityDisplay}</span>
                 </div>
                 <div class="detail-item">
                     <strong>Anonymity Level:</strong>

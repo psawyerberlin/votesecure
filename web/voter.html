@@ -21,7 +21,7 @@
                 </a>
             </div>
             <div class="nav-actions">
-				<a href="viewElectionDetails.html" class="btn btn-sm btn-secondary">View Election Details</a>
+				<!-- <a href="viewElectionDetails.html" class="btn btn-sm btn-secondary">View Election Details</a> -->
                 <div id="walletInfo"></div>
                 <button id="connectWalletBtn" class="btn btn-sm btn-primary">
                     <span class="service-status loading"></span>
@@ -250,10 +250,16 @@
     </footer>
 
     <!-- Scripts: Load in correct order -->
-    <!-- 1. ES Module Shims (for import maps support) -->
+    <!-- 1. Buffer Polyfill (for Node.js Buffer compatibility in browser) -->
+    <script type="module">
+        import { Buffer } from 'https://cdn.jsdelivr.net/npm/buffer@6.0.3/+esm';
+        window.Buffer = Buffer;
+    </script>
+
+    <!-- 2. ES Module Shims (for import maps support) -->
     <script async src="https://ga.jspm.io/npm:es-module-shims@2/dist/es-module-shims.js"></script>
-    
-    <!-- 2. Import Map (defines module locations) -->
+
+    <!-- 3. Import Map (defines module locations) -->
     <script type="importmap">
     {
       "imports": {
@@ -263,10 +269,10 @@
     }
     </script>
 
-    <!-- 3. CKB Service with CCC (ES Module) - Uses JoyID with CCC library -->
+    <!-- 4. CKB Service with CCC (ES Module) - Uses JoyID with CCC library -->
     <script type="module" src="../src/ckbService_ccc.js"></script>
-    
-    <!-- 4. Voter Script (Regular script, uses globals) -->
+
+    <!-- 5. Voter Script (Regular script, uses globals) -->
     <script src="voter.js"></script>
 
 </body>

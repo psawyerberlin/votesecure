@@ -300,6 +300,51 @@ function importElectionIds() {
 }
 
 /**
+ * Clear all cached data including JoyID session and localStorage
+ */
+function clearAllCacheData() {
+  if (!confirm('⚠️ Clear ALL cached data?\n\nThis will:\n- Disconnect your wallet\n- Clear all stored election IDs\n- Clear JoyID session cache\n- Reset the application\n\nYou will need to reconnect and re-import elections.\n\nContinue?')) {
+    return;
+  }
+
+  try {
+    // Clear localStorage
+    localStorage.clear();
+    console.log('✓ localStorage cleared');
+
+    // Clear sessionStorage
+    sessionStorage.clear();
+    console.log('✓ sessionStorage cleared');
+
+    // Clear IndexedDB (used by JoyID)
+    if (window.indexedDB) {
+      indexedDB.databases().then(databases => {
+        databases.forEach(db => {
+          if (db.name) {
+            indexedDB.deleteDatabase(db.name);
+            console.log(`✓ Cleared IndexedDB: ${db.name}`);
+          }
+        });
+      });
+    }
+
+    // Reset current state
+    currentOrganizer = null;
+
+    showNotification('✓ All cache cleared! Page will reload in 2 seconds...', 'success');
+
+    // Reload page after 2 seconds
+    setTimeout(() => {
+      window.location.reload();
+    }, 2000);
+
+  } catch (error) {
+    console.error('Failed to clear cache:', error);
+    showNotification('Failed to clear some cache data. Try clearing browser cache manually.', 'error');
+  }
+}
+
+/**
  * Display events in the "My Elections" section
  * @param {Array} events - Array of event objects
  */
@@ -420,7 +465,7 @@ Eligibility: ${formatEligibilityType(event.metadata.eligibility.type)}
  * Helper function to copy voter link to clipboard
  */
 function copyVoterLink(eventId) {
-  const voterUrl = `${window.location.origin}/voter.html?event=${eventId}`;
+  const voterUrl = `${window.location.origin}/web/voter.html?event=${eventId}`;
   navigator.clipboard.writeText(voterUrl).then(() => {
     showNotification('Voter link copied to clipboard!', 'success');
   }).catch(err => {
@@ -1610,9 +1655,26 @@ async function publishEvent(eventConfig, organizerAddress) {
       console.log('==============================');
     }
     
+    // Calculate metadata capacity based on actual data size
+    const metadataEncodedData = window.CKBService.encodeMetadataData(metadataData);
+    const metadataDataSize = (metadataEncodedData.length - 2) / 2; // Convert hex string to bytes
+    const metadataLockSize = 33 + 32 + 1; // codeHash (32) + hashType (1) + args (33)
+    const metadataOccupiedCapacity = (61 + metadataLockSize + metadataDataSize) * 100000000; // in shannons
+    const metadataCapacity = Math.max(metadataOccupiedCapacity, CAPACITY_CKB.METADATA * 100000000);
+
+    if (DEBUG_LOG) {
+      console.log('=== METADATA CAPACITY CALCULATION ===');
+      console.log('Encoded data length (hex):', metadataEncodedData.length);
+      console.log('Data size (bytes):', metadataDataSize);
+      console.log('Lock size (bytes):', metadataLockSize);
+      console.log('Occupied capacity:', metadataOccupiedCapacity / 100000000, 'CKB');
+      console.log('Final capacity:', metadataCapacity / 100000000, 'CKB');
+      console.log('=====================================');
+    }
+
     const cellOutputs = [
       {
-        capacity: CAPACITY_CKB.METADATA * 100000000,
+        capacity: metadataCapacity,
         cellOutput: {
           lock: {
             codeHash: lockscriptConfig.codeHash,
@@ -1620,7 +1682,7 @@ async function publishEvent(eventConfig, organizerAddress) {
             args: '0x01' + stringToHex(eventConfig.eventId).padStart(64, '0')  // 33 bytes total
           }
         },
-        encodedData: window.CKBService.encodeMetadataData(metadataData)
+        encodedData: metadataEncodedData
       },
       {
         capacity: CAPACITY_CKB.RESULT * 100000000,
@@ -1915,24 +1977,32 @@ function downloadInviteMaterials() {
 // UI - MY ELECTIONS
 // ============================================================================
 
-function showMyElections() {
+async function showMyElections() {
   if (!currentOrganizer) {
     showNotification('Please connect your wallet first', 'error');
     return;
   }
-  
+
   const createView = document.getElementById('createView');
   const electionsView = document.getElementById('electionsListView');
-  
+
   if (createView) {
     createView.style.display = 'none';
   }
-  
+
   if (electionsView) {
     electionsView.style.display = 'block';
   }
-  
-  loadMyElections();
+
+  // Show loading indicator
+  const container = document.getElementById('electionsList');
+  if (container) {
+    container.innerHTML = '<div class="loading-message">Loading elections from blockchain...</div>';
+  }
+
+  // Automatically refresh from blockchain (this will also display the elections)
+  if (DEBUG_LOG) console.log('Auto-refreshing elections from blockchain...');
+  await loadMyEventsFromBlockchain(currentOrganizer.address);
 }
 
 function showCreateView() {
