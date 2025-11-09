@@ -1,18 +1,18 @@
 {
   "votesecure_lockscript": {
-    "code_hash": "0x3b3f2d37f03fac4145aeb092d1e925b5624c86b2d7c9717d526be708c9efb6e1",
+    "code_hash": "0x115a04a70bb158c881a2e9471d829aea8242fa229eb2d8694bf262ca4c427a33",
     "hash_type": "data",
-    "tx_hash": "0x0ebf65d3adbabb40bae687283b0a51b3dd0fa619e78c890fe0ba516f4eae061f",
+    "tx_hash": "0xe839e2111b2e3353337e1804f9985745665529a1cfb31667a6843ddffd3020ec",
     "out_point": {
-      "tx_hash": "0x0ebf65d3adbabb40bae687283b0a51b3dd0fa619e78c890fe0ba516f4eae061f",
+      "tx_hash": "0xe839e2111b2e3353337e1804f9985745665529a1cfb31667a6843ddffd3020ec",
       "index": "0x0"
     },
-    "deployed_at": "2025-10-23T13:51:04.731668",
+    "deployed_at": "2025-11-09T17:24:31.189964",
     "deployed_by": "ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqdw2upan53dl6efk64fz6luewp8m6mjffctw548v",
     "network": "testnet",
-    "binary_size_bytes": 3672,
-    "capacity_shannons": 7100003672,
-    "capacity_ckb": 71.00003672,
+    "binary_size_bytes": 21200,
+    "capacity_shannons": 7100021200,
+    "capacity_ckb": 71.000212,
     "rpc_url": "https://testnet.ckb.dev/rpc",
     "indexer_url": "https://testnet.ckb.dev/indexer"
   },

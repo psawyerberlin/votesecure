@@ -133,8 +133,19 @@ async function loadElectionDetails(eventId) {
         }
 
         currentEvent = event;
-        displayElectionDetails(event);
-        
+
+        // Load participation statistics
+        let participationStats = null;
+        try {
+            if (DEBUG_LOG) console.log('Loading participation statistics...');
+            participationStats = await window.CKBService.getParticipationStats(eventId);
+            if (DEBUG_LOG) console.log('Participation stats:', participationStats);
+        } catch (statsError) {
+            if (DEBUG_LOG) console.warn('Failed to load participation stats:', statsError);
+        }
+
+        displayElectionDetails(event, participationStats);
+
     } catch (error) {
         if (DEBUG_LOG) {
             console.error('=== ERROR LOADING ELECTION DETAILS ===');
@@ -154,16 +165,17 @@ async function loadElectionDetails(eventId) {
 // DISPLAY FUNCTIONS
 // ============================================================================
 
-function displayElectionDetails(event) {
+function displayElectionDetails(event, participationStats = null) {
     if (DEBUG_LOG) {
         console.log('=== DISPLAYING ELECTION DETAILS ===');
         console.log('Rendering HTML for event:', event.eventId);
+        console.log('Participation stats:', participationStats);
     }
 
     hideAllSections();
 
     const container = document.getElementById('electionDetails');
-    container.innerHTML = generateElectionDetailsHTML(event);
+    container.innerHTML = generateElectionDetailsHTML(event, participationStats);
     container.style.display = 'block';
 
     if (DEBUG_LOG) {
@@ -171,7 +183,7 @@ function displayElectionDetails(event) {
     }
 }
 
-function generateElectionDetailsHTML(event) {
+function generateElectionDetailsHTML(event, participationStats = null) {
     const metadata = event.metadata || {};
     const result = event.result || {};
     const eventFund = event.eventFund || {};
@@ -273,13 +285,16 @@ function generateElectionDetailsHTML(event) {
                 </div>
             </div>
         </div>
-        
+
+        <!-- Participation Section -->
+        ${generateParticipationHTML(participationStats)}
+
         <!-- Questions Section -->
         <div class="details-section">
             <h4>❓ Questions</h4>
             ${generateQuestionsHTML(event.questions || [])}
         </div>
-        
+
         <!-- Results Section -->
         <div class="details-section">
             <h4>📊 Results</h4>
@@ -386,6 +401,9 @@ function generateElectionDetailsHTML(event) {
             </div>
         </div>
         
+        <!-- Withdrawal Section -->
+        ${generateWithdrawalSectionHTML(event)}
+
         <!-- Action Buttons -->
         <div class="action-buttons">
             <a href="voter.html?event=${event.eventId}" class="btn btn-primary">
@@ -396,6 +414,94 @@ function generateElectionDetailsHTML(event) {
             </a>
         </div>
     `;
+}
+
+/**
+ * Generate withdrawal section HTML
+ */
+function generateWithdrawalSectionHTML(event) {
+    const now = Math.floor(Date.now() / 1000);
+    const auditEndTime = event.schedule?.auditEndTime;
+    const remainingFunds = event.eventFund?.remainingFunds || 0;
+    const remainingCKB = (remainingFunds / 100000000).toFixed(2);
+
+    if (!auditEndTime || remainingFunds === 0) {
+        return ''; // No withdrawal section needed
+    }
+
+    const withdrawAvailable = now >= auditEndTime;
+
+    if (withdrawAvailable) {
+        return `
+            <div class="details-section">
+                <h4>💰 Withdrawal Available</h4>
+                <div class="withdrawal-notice" style="padding: 16px; background: #d4edda; border: 2px solid #28a745; border-radius: 8px;">
+                    <p style="margin: 0 0 12px 0; color: #155724; font-weight: 600;">
+                        ✓ The audit period has ended. Funds are available for withdrawal.
+                    </p>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <strong>Remaining Funds:</strong>
+                            <span style="color: #28a745; font-size: 18px; font-weight: bold;">${remainingCKB} CKB</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Audit End Date:</strong>
+                            <span>${new Date(auditEndTime * 1000).toLocaleString()}</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <button
+                            onclick="initiateWithdrawal('${event.eventId}')"
+                            class="btn btn-primary"
+                            style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); width: 100%;">
+                            💸 Withdraw ${remainingCKB} CKB to Organizer Wallet
+                        </button>
+                        <p style="margin: 12px 0 0 0; font-size: 13px; color: #666;">
+                            ⓘ This will consume all event cells and return funds to your wallet.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        const timeRemaining = auditEndTime - now;
+        const days = Math.floor(timeRemaining / 86400);
+        const hours = Math.floor((timeRemaining % 86400) / 3600);
+        const minutes = Math.floor((timeRemaining % 3600) / 60);
+
+        let timeString = '';
+        if (days > 0) timeString = `${days} day${days > 1 ? 's' : ''} ${hours} hour${hours !== 1 ? 's' : ''}`;
+        else if (hours > 0) timeString = `${hours} hour${hours !== 1 ? 's' : ''} ${minutes} minute${minutes !== 1 ? 's' : ''}`;
+        else timeString = `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+
+        return `
+            <div class="details-section">
+                <h4>💰 Fund Withdrawal</h4>
+                <div class="withdrawal-pending" style="padding: 16px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px;">
+                    <p style="margin: 0 0 12px 0; color: #856404; font-weight: 600;">
+                        ⏳ Withdrawal will be available after the audit period ends
+                    </p>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <strong>Remaining Funds:</strong>
+                            <span style="font-size: 18px; font-weight: bold;">${remainingCKB} CKB</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Audit End Date:</strong>
+                            <span>${new Date(auditEndTime * 1000).toLocaleString()}</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Time Until Withdrawal:</strong>
+                            <span style="color: #ffc107; font-weight: bold;">${timeString}</span>
+                        </div>
+                    </div>
+                    <p style="margin: 12px 0 0 0; font-size: 13px; color: #666;">
+                        ⓘ Funds can be withdrawn after ${new Date(auditEndTime * 1000).toLocaleString()}
+                    </p>
+                </div>
+            </div>
+        `;
+    }
 }
 
 /**
@@ -424,6 +530,60 @@ function generateQuestionsHTML(questions) {
             </div>
         </div>
     `).join('');
+}
+
+/**
+ * Generate HTML for participation statistics
+ */
+function generateParticipationHTML(participationStats) {
+    if (!participationStats) {
+        return `
+            <div class="details-section">
+                <h4>👥 Participation</h4>
+                <p class="no-data">Loading participation data...</p>
+            </div>
+        `;
+    }
+
+    const { totalVotes, hasGrouping, groupBreakdown } = participationStats;
+
+    let groupHTML = '';
+    if (hasGrouping && groupBreakdown.length > 0) {
+        groupHTML = `
+            <div class="group-breakdown" style="margin-top: 16px;">
+                <strong style="display: block; margin-bottom: 12px;">Votes by Group:</strong>
+                <div class="details-grid">
+                    ${groupBreakdown.map(group => {
+                        const groupLabel = Object.entries(group.groupData)
+                            .map(([key, value]) => `${key}: ${value}`)
+                            .join(', ');
+                        return `
+                            <div class="detail-item">
+                                <strong>${escapeHtml(groupLabel)}:</strong>
+                                <span>${group.count} vote${group.count !== 1 ? 's' : ''}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="details-section">
+            <h4>👥 Participation</h4>
+            <div class="participation-stats">
+                <div class="stat-highlight" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 16px;">
+                    <div style="font-size: 14px; opacity: 0.9; margin-bottom: 8px;">Total Votes Submitted</div>
+                    <div style="font-size: 48px; font-weight: bold; line-height: 1;">${totalVotes}</div>
+                    <div style="font-size: 13px; opacity: 0.8; margin-top: 8px;">
+                        ${totalVotes === 0 ? 'No votes yet' : totalVotes === 1 ? '1 ballot submitted' : `${totalVotes} ballots submitted`}
+                    </div>
+                </div>
+                ${groupHTML}
+            </div>
+        </div>
+    `;
 }
 
 /**
@@ -613,6 +773,127 @@ function hideAllSections() {
     document.getElementById('electionIdInput').style.display = 'none';
     document.getElementById('errorState').style.display = 'none';
     document.getElementById('electionDetails').style.display = 'none';
+}
+
+/**
+ * Initiate withdrawal process
+ */
+async function initiateWithdrawal(eventId) {
+    if (DEBUG_LOG) {
+        console.log('=== INITIATING WITHDRAWAL ===');
+        console.log('Event ID:', eventId);
+    }
+
+    try {
+        // Check if user has connected wallet
+        if (!window.CKBService || !window.CKBService.checkJoyIDSession) {
+            showNotification('Please connect your wallet first', 'error');
+            // Redirect to organizer page
+            setTimeout(() => {
+                window.location.href = `organizer.html`;
+            }, 2000);
+            return;
+        }
+
+        // Check for existing session
+        const session = await window.CKBService.checkJoyIDSession();
+        if (!session || !session.address) {
+            showNotification('Please connect your wallet on the organizer dashboard', 'info');
+            // Redirect to organizer page
+            setTimeout(() => {
+                window.location.href = `organizer.html`;
+            }, 2000);
+            return;
+        }
+
+        if (DEBUG_LOG) {
+            console.log('User session:', session.address);
+        }
+
+        // Load event data
+        const event = await window.CKBService.getEvent(eventId);
+        if (!event) {
+            showNotification('Event not found', 'error');
+            return;
+        }
+
+        // Verify audit period has ended
+        const now = Math.floor(Date.now() / 1000);
+        const auditEndTime = event.schedule?.auditEndTime;
+
+        if (!auditEndTime || now < auditEndTime) {
+            showNotification('Audit period has not ended yet', 'warning');
+            return;
+        }
+
+        // Calculate withdrawal amount
+        const remainingFunds = event.eventFund?.remainingFunds || 0;
+        const remainingCKB = (remainingFunds / 100000000).toFixed(2);
+
+        if (remainingFunds === 0) {
+            showNotification('No funds available for withdrawal', 'info');
+            return;
+        }
+
+        // Confirm withdrawal
+        const confirmed = confirm(
+            `Withdraw Event Funds\n\n` +
+            `This will:\n` +
+            `• Withdraw ${remainingCKB} CKB from EventFund\n` +
+            `• Clean up Metadata cell\n` +
+            `• Clean up Result cell\n` +
+            `• Return all capacity to your wallet\n\n` +
+            `The event will be permanently closed.\n\n` +
+            `Continue?`
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        showNotification('Processing withdrawal transaction...', 'info');
+
+        // Execute withdrawal
+        if (!window.CKBService.withdrawEventFunds) {
+            showNotification('Withdrawal service not available', 'error');
+            return;
+        }
+
+        const result = await window.CKBService.withdrawEventFunds(
+            eventId,
+            session.address,
+            event
+        );
+
+        if (result.success) {
+            if (DEBUG_LOG) {
+                console.log('=== WITHDRAWAL SUCCESS ===');
+                console.log('Transaction hash:', result.txHash);
+                console.log('Amount withdrawn:', result.amount);
+                console.log('==========================');
+            }
+
+            showNotification(
+                `✓ Withdrawal successful! ${(result.amount / 100000000).toFixed(2)} CKB returned to your wallet.`,
+                'success'
+            );
+
+            // Reload page after 3 seconds
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
+        } else {
+            showNotification(`Withdrawal failed: ${result.error}`, 'error');
+        }
+
+    } catch (error) {
+        console.error('=== WITHDRAWAL FAILED ===');
+        console.error('Error:', error);
+        console.error('Error message:', error.message);
+        console.error('========================');
+
+        showNotification(`Withdrawal failed: ${error.message}`, 'error');
+    }
 }
 
 /**

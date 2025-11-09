@@ -25,10 +25,10 @@ const INDEXER_URL = USE_PRIVATE_NODE
 // VoteSecure LockScript Configuration (from votesecure_config.json)
 const VOTESECURE_CONFIG = {
   lockscript: {
-    codeHash: "0x3b3f2d37f03fac4145aeb092d1e925b5624c86b2d7c9717d526be708c9efb6e1",
+    codeHash: "0x115a04a70bb158c881a2e9471d829aea8242fa229eb2d8694bf262ca4c427a33",
     hashType: "data",
     outPoint: {
-      txHash: "0x0ebf65d3adbabb40bae687283b0a51b3dd0fa619e78c890fe0ba516f4eae061f",
+      txHash: "0xe839e2111b2e3353337e1804f9985745665529a1cfb31667a6843ddffd3020ec",
       index: "0x0"
     }
   }
@@ -1182,6 +1182,85 @@ async function getEvent(eventId) {
 }
 
 /**
+ * Get participation statistics for an event
+ * Returns total vote count and breakdown by groups (if grouping applies)
+ */
+async function getParticipationStats(eventId) {
+  try {
+    if (DEBUG_LOG) console.log('Getting participation stats for event:', eventId);
+
+    // Query all voter cells for this event
+    const eventIdHex = stringToHex(eventId).padStart(64, '0');
+    const voterCells = await queryVoterCells(eventIdHex);
+
+    if (DEBUG_LOG) {
+      console.log(`Found ${voterCells.length} voter cells`);
+    }
+
+    // Total participation count
+    const totalVotes = voterCells.length;
+
+    // Parse grouping data from each voter cell
+    const groupCounts = {};
+    const voterDetails = [];
+
+    for (const cell of voterCells) {
+      try {
+        const ballotData = parseJsonData(cell.outputData);
+
+        if (ballotData) {
+          voterDetails.push({
+            timestamp: ballotData.timestamp,
+            groupingData: ballotData.groupingData || {},
+            sequence: ballotData.sequence || 1
+          });
+
+          // Count by grouping data
+          if (ballotData.groupingData && Object.keys(ballotData.groupingData).length > 0) {
+            const groupKey = JSON.stringify(ballotData.groupingData);
+            groupCounts[groupKey] = (groupCounts[groupKey] || 0) + 1;
+          }
+        }
+      } catch (parseError) {
+        if (DEBUG_LOG) console.warn('Failed to parse voter cell data:', parseError);
+      }
+    }
+
+    // Format group counts into readable structure
+    const groupBreakdown = Object.entries(groupCounts).map(([groupKey, count]) => {
+      try {
+        const groupData = JSON.parse(groupKey);
+        return { groupData, count };
+      } catch {
+        return { groupData: { raw: groupKey }, count };
+      }
+    });
+
+    const stats = {
+      totalVotes,
+      hasGrouping: groupBreakdown.length > 0,
+      groupBreakdown,
+      voterDetails
+    };
+
+    if (DEBUG_LOG) {
+      console.log('Participation stats:', stats);
+    }
+
+    return stats;
+
+  } catch (error) {
+    console.error('Failed to get participation stats:', error);
+    return {
+      totalVotes: 0,
+      hasGrouping: false,
+      groupBreakdown: [],
+      voterDetails: []
+    };
+  }
+}
+
+/**
  * Submit a ballot to the blockchain
  */
 async function submitBallot(ballot, voterAddress) {
@@ -1228,10 +1307,22 @@ async function submitBallot(ballot, voterAddress) {
     
     // Encode ballot data
     const encodedData = encodeVoterData(ballotData);
-    
+
+    // Calculate required capacity dynamically based on cell structure and data
+    // CKB capacity formula: cell_output_size + data_size (in bytes)
+    // Rule: Each byte requires 1 CKB (100,000,000 shannons) for safety
+    const dataByteLength = Math.ceil((encodedData.length - 2) / 2); // Remove 0x prefix, convert hex to bytes
+    const lockScriptByteLength = 32 + 1 + Math.ceil((voterArgs.length - 2) / 2); // code_hash(32) + hash_type(1) + args
+    const cellStructureOverhead = 100; // Overhead for molecular serialization
+    const estimatedCellSize = cellStructureOverhead + lockScriptByteLength + dataByteLength;
+    const minCapacity = BigInt(61) * BigInt(100000000); // Absolute minimum for any cell
+    const calculatedCapacity = BigInt(estimatedCellSize) * BigInt(100000000);
+    const bufferCapacity = BigInt(20) * BigInt(100000000); // 20 CKB buffer for safety
+    const totalCapacity = calculatedCapacity > minCapacity ? calculatedCapacity + bufferCapacity : minCapacity + bufferCapacity;
+
     // Create voter cell
     const cellOutput = {
-      capacity: 70 * 100000000, // 70 CKB for voter cell
+      capacity: totalCapacity.toString(), // Dynamic capacity based on data size
       cellOutput: {
         lock: {
           codeHash: lockscriptConfig.codeHash,
@@ -1241,22 +1332,26 @@ async function submitBallot(ballot, voterAddress) {
       },
       encodedData: encodedData
     };
-    
+
     if (DEBUG_LOG) {
       console.log('=== CREATING VOTER CELL ===');
       console.warn('⚠️ WARNING: Voter is paying transaction fees!');
       console.warn('⚠️ This violates white paper - organizer should pay via EventFund');
       console.warn('⚠️ See ARCHITECTURE_FEE_ISSUE.md for proper implementation');
       console.log('Voter cell lock args:', voterArgs);
-      console.log('Voter cell capacity:', 70, 'CKB');
+      console.log('Capacity calculation:');
+      console.log('  - Data bytes:', dataByteLength);
+      console.log('  - Lock script bytes:', lockScriptByteLength);
+      console.log('  - Estimated cell size:', estimatedCellSize, 'bytes');
+      console.log('  - Total capacity:', shannons2CKB(totalCapacity), 'CKB');
       console.log('Ballot data:');
       console.log('  - Event ID:', ballotData.eventId);
       console.log('  - Voter Public Key:', ballotData.voterPublicKey);
       console.log('  - Timestamp:', ballotData.timestamp);
       console.log('  - Sequence:', ballotData.sequence);
-      console.log('  - Payload size:', encodedData.length, 'bytes');
+      console.log('  - Payload size:', encodedData.length, 'hex chars =', dataByteLength, 'bytes');
       console.log('Cell output structure:', {
-        capacity: cellOutput.capacity,
+        capacity: shannons2CKB(totalCapacity) + ' CKB',
         lockScript: cellOutput.cellOutput.lock,
         dataSize: encodedData.length
       });
@@ -1264,21 +1359,24 @@ async function submitBallot(ballot, voterAddress) {
     
     // Submit transaction (pass address as first param)
     if (DEBUG_LOG) console.log('Signing and submitting transaction with JoyID...');
-    const result = await createCellsWithSignRaw(voterAddress, [cellOutput]);
-    
-    if (!result.success) {
-      throw new Error(result.message || 'Failed to submit ballot');
+    const txHash = await createCellsWithSignRaw(voterAddress, [cellOutput]);
+
+    // createCellsWithSignRaw returns the txHash directly (string)
+    if (!txHash) {
+      throw new Error('Failed to submit ballot - no transaction hash returned');
     }
-    
+
     const receipt = {
       success: true,
+      eventId: ballot.eventId,
       commitmentHash: commitmentHash,
-      txHash: result.txHash,
+      txHash: txHash,
       timestamp: ballotData.timestamp,
       sequence: ballotData.sequence,
-      message: 'Ballot submitted successfully'
+      message: 'Ballot submitted successfully',
+      explorerUrl: `https://pudge.explorer.nervos.org/transaction/${txHash}`
     };
-    
+
     if (DEBUG_LOG) console.log('✓ Ballot submitted:', receipt);
     return receipt;
     
@@ -1331,6 +1429,7 @@ window.CKBService = {
   encodeMetadataData,
   encodeResultData,
   getEvent,
+  getParticipationStats,
   submitBallot,
   searchCellsByLockArgs,
   
@@ -1396,6 +1495,7 @@ export {
   getLockscriptConfig,
   getCellTypes,
   getEvent,
+  getParticipationStats,
   submitBallot,
   searchCellsByLockArgs,
   // ADD THESE NEW EXPORTS:

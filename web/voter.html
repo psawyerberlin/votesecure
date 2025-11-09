@@ -171,22 +171,29 @@
                             <p class="receipt-subtitle">Save this information to verify your vote was included in the final tally.</p>
                             
                             <div class="receipt-field">
+                                <label>Event ID:</label>
+                                <div id="receiptEventId">--</div>
+                                <button type="button" onclick="copyToClipboard('receiptEventId')" class="btn-copy">Copy</button>
+                            </div>
+
+                            <div class="receipt-field">
                                 <label>Commitment Hash:</label>
                                 <div class="hash-display" id="receiptCommitment" title="Use this to verify your ballot later">--</div>
                                 <button type="button" onclick="copyToClipboard('receiptCommitment')" class="btn-copy">Copy</button>
                             </div>
-                            
+
                             <div class="receipt-field">
                                 <label>Transaction Hash:</label>
                                 <div class="hash-display" id="receiptTxHash">--</div>
                                 <button type="button" onclick="copyToClipboard('receiptTxHash')" class="btn-copy">Copy</button>
+                                <a id="receiptExplorerLink" href="#" target="_blank" style="display: none; margin-left: 10px; font-size: 12px;">View on Explorer</a>
                             </div>
-                            
+
                             <div class="receipt-field">
                                 <label>Timestamp:</label>
                                 <div id="receiptTimestamp">--</div>
                             </div>
-                            
+
                             <div class="receipt-field">
                                 <label>Update Sequence:</label>
                                 <div id="receiptSequence">--</div>

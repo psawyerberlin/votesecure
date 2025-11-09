@@ -1,1 +1,1 @@
-C:\01_PSLaptopData\04_java\votesecure_v0.9\PythonSetup\contract\target\riscv64imac-unknown-none-elf\release\votesecure-lockscript: C:\01_PSLaptopData\04_java\votesecure_v0.9\PythonSetup\contract\src\main.rs
+C:\01_PSLaptopData\04_java\votesecure_v0.87\PythonSetup\contract\target\riscv64imac-unknown-none-elf\release\votesecure-lockscript: C:\01_PSLaptopData\04_java\votesecure_v0.87\PythonSetup\contract\src\main.rs

@@ -30,11 +30,12 @@ A Get the Neuron Wallet details
     step3: c:\node> ckb-cli account import-keystore --path "C:\temp\CKB_TestNet_PS2.json"
             The first password is the password of the neuron wallet. The second is a password you set (note it down)
             Note in the output the lock_arg: ae570....724a7
+			(to check the account address: c:\node>  ckb-cli account list )
     step4: c:\node> ckb-cli account export --lock-arg ae570....724a7 --extended-privkey-path C:\temp\wallet.txt
-            # The file has two lines: line 1 = raw private key (hex), line 2 = chain code. Node the first line
-    step5: c:\node> ckb-cli account export --lock-arg ae5703d9d22dfeb29b6aa916bfccb827deb724a7 --extended-privkey-path NUL
+            # The file has two lines: line 1 = raw private key (hex), line 2 = chain code. Note the first line
+    step5: c:\node> ckb-cli account export --lock-arg ae570....724a7 --extended-privkey-path NUL
             #this Delete the private from the keystore
-			Also deliete the keystore file in: C:\Users\Patrick Sawyer\.ckb-cli\keystore
+			Also delete the keystore file in: C:\Users\Patrick Sawyer\.ckb-cli\keystore
     step6: Create the file neuronkey.json with the noted address and raw private key (hex)
             {"address":"ckt...tw548v",
              "rawprivatekey(hex)":"1234....6789"}
@@ -69,7 +70,7 @@ D- Create Lockscript cell on the blockchain (using file votesecure_lockscript.bi
 	step4: c:\node> ckb-cli account import-keystore --path "C:\temp\CKB_TestNet_PS2.json"
 				The first password is the password of the neuron wallet. The second is a password you set (note it down)
 				Note in the output the lock_arg needed for next step!
-	step5: Create a deployment_config.toml file with this content
+	step5: Create a deployment_config.toml file with this content (the code_hash is the standard for neuron)
 				[[cells]]
 				name = "votesecure_lockscript"
 				enable_type_id = false
@@ -106,7 +107,8 @@ D- Create Lockscript cell on the blockchain (using file votesecure_lockscript.bi
 
 	
 	step8: Deploy the transactions which create the file deployment_info.json
-				CKB> deploy gen-txs --from-address ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqdw2upan53dl6efk64fz6luewp8m6mjffctw548v --fee-rate 1000 --deployment-config deployment_config.toml --info-file deployment_info.json --migration-dir
+				CKB> deploy gen-txs --from-address ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqdw2upan53dl6efk64fz6luewp8m6mjffctw548v --fee-rate 1000 --deployment-config deployment_config.toml --info-file deployment_info.json --migration-dir .
+
 				Result:
 				CKB> deploy gen-txs --from-address ckt1qzda0cr08m85hc8jlnfp3zer7xulejywt49kt2rr0vthywaa50xwsqdw2upan53dl6efk64fz6luewp8m
 					6mjffctw548v --fee-rate 1000 --deployment-config deployment_config.toml --info-file deployment_info.json --migration-dir
@@ -146,6 +148,7 @@ Once you have the TX hash, run on your Windows PC:
 
 Step 1) python VoteSecure_create_lockscript_cell.py --finalize 0xYOUR_TX_HASH_HERE
 	C:\Python\Python312\python.exe VoteSecure_create_lockscript_cell.py --finalize 0x0ebf65d3adbabb40bae687283b0a51b3dd0fa619e78c890fe0ba516f4eae061f
+	C:\Python\Python312\python.exe VoteSecure_create_lockscript_cell.py --finalize 0xe839e2111b2e3353337e1804f9985745665529a1cfb31667a6843ddffd3020ec
 
 
 	Result:exit

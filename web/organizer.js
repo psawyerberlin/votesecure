@@ -367,20 +367,31 @@ function displayMyElections(events) {
   
   // Generate election cards
   container.innerHTML = events.map(event => {
-    const statusClass = event.status === 'active' ? 'status-active' : 
+    const statusClass = event.status === 'active' ? 'status-active' :
                        event.status === 'ended' ? 'status-ended' : 'status-pending';
-    
-    const createdDate = event.metadata?.createdAt ? 
+
+    const createdDate = event.metadata?.createdAt ?
       new Date(event.metadata.createdAt * 1000).toLocaleDateString() : 'Unknown';
-    
+
     const startDate = event.schedule?.startTime ?
       new Date(event.schedule.startTime * 1000).toLocaleDateString() : 'Not set';
-      
+
     const endDate = event.schedule?.endTime ?
       new Date(event.schedule.endTime * 1000).toLocaleDateString() : 'Not set';
-    
+
+    const auditEndDate = event.schedule?.auditEndTime ?
+      new Date(event.schedule.auditEndTime * 1000).toLocaleDateString() : 'Not set';
+
     const txHash = event.cells?.metadata?.outPoint?.txHash;
-    
+
+    // Check withdrawal availability
+    const withdrawAvailable = canWithdraw(event);
+    const withdrawTimeRemaining = getWithdrawalTimeRemaining(event);
+
+    // Calculate remaining funds
+    const remainingFunds = event.eventFund?.remainingFunds || 0;
+    const remainingCKB = (remainingFunds / 100000000).toFixed(2);
+
     return `
       <div class="election-card">
         <div class="election-header">
@@ -395,9 +406,28 @@ function displayMyElections(events) {
             <span><strong>End:</strong> ${endDate}</span>
           </div>
           <div class="election-meta">
+            <span><strong>Audit End:</strong> ${auditEndDate}</span>
+            <span><strong>Remaining Funds:</strong> ${remainingCKB} CKB</span>
+          </div>
+          <div class="election-meta">
             <span><strong>Event ID:</strong> <code>${event.eventId}</code></span>
             ${txHash ? `<span><strong>TX:</strong> <code>${txHash.slice(0, 10)}...</code></span>` : ''}
           </div>
+          ${withdrawAvailable ? `
+            <div class="withdrawal-notice" style="margin-top: 12px; padding: 12px; background: #d4edda; border-left: 4px solid #28a745; border-radius: 4px;">
+              <strong style="color: #155724;">✓ Funds Available for Withdrawal</strong>
+              <p style="margin: 4px 0 0 0; color: #155724; font-size: 14px;">
+                ${remainingCKB} CKB can be withdrawn back to your wallet.
+              </p>
+            </div>
+          ` : remainingFunds > 0 ? `
+            <div class="withdrawal-pending" style="margin-top: 12px; padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+              <strong style="color: #856404;">⏳ Withdrawal Available In: ${withdrawTimeRemaining}</strong>
+              <p style="margin: 4px 0 0 0; color: #856404; font-size: 14px;">
+                Funds can be withdrawn after the audit period ends.
+              </p>
+            </div>
+          ` : ''}
         </div>
         <div class="election-actions">
           <a href="viewElectionDetails.html?event=${event.eventId}" class="btn btn-secondary">
@@ -413,13 +443,20 @@ function displayMyElections(events) {
             </svg>
             Copy Voter Link
           </button>
-          ${txHash ? 
+          ${txHash ?
             `<button onclick="viewOnExplorer('${txHash}')" class="btn btn-secondary">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
                 <circle cx="11" cy="11" r="8"></circle>
                 <path d="M21 21l-4.35-4.35"></path>
               </svg>
               View on Explorer
+            </button>` : ''}
+          ${withdrawAvailable && remainingFunds > 0 ?
+            `<button onclick="withdrawEventFunds('${event.eventId}', '${currentOrganizer.address}')" class="btn btn-primary" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
+                <path d="M12 2v20M2 12h20"></path>
+              </svg>
+              Withdraw ${remainingCKB} CKB
             </button>` : ''}
         </div>
       </div>
@@ -1707,7 +1744,7 @@ async function publishEvent(eventConfig, organizerAddress) {
           lock: {
             codeHash: lockscriptConfig.codeHash,
             hashType: lockscriptConfig.hashType,
-            args: '0x04' + stringToHex(eventConfig.eventId).padStart(64, '0')  // 33 bytes total
+            args: '0x00' + stringToHex(eventConfig.eventId).padStart(64, '0')  // 33 bytes total - EVENTFUND_TYPE
           }
         },
         encodedData: window.CKBService.encodeEventFundData(eventFundData)
@@ -1907,6 +1944,183 @@ function generateInviteMaterials(eventConfig) {
         url: baseUrl
       };
   }
+}
+
+// ============================================================================
+// WITHDRAWAL & CLEANUP
+// ============================================================================
+
+/**
+ * Withdraw event funds and clean up all cells after audit period
+ * @param {string} eventId - Event identifier
+ * @param {string} organizerAddress - Organizer's CKB address
+ */
+async function withdrawEventFunds(eventId, organizerAddress) {
+  try {
+    if (!currentOrganizer || currentOrganizer.address !== organizerAddress) {
+      showNotification('Only the organizer can withdraw funds', 'error');
+      return { success: false, error: 'Unauthorized' };
+    }
+
+    if (DEBUG_LOG) {
+      console.log('=== WITHDRAWAL INITIATED ===');
+      console.log('Event ID:', eventId);
+      console.log('Organizer:', organizerAddress);
+    }
+
+    // Load event data from blockchain
+    const event = await window.CKBService.getEvent(eventId);
+    if (!event) {
+      showNotification('Event not found', 'error');
+      return { success: false, error: 'Event not found' };
+    }
+
+    if (DEBUG_LOG) {
+      console.log('Event loaded:', event);
+      console.log('Schedule:', event.schedule);
+    }
+
+    // Check if audit period has ended
+    const now = Math.floor(Date.now() / 1000);
+    const auditEndTime = event.schedule?.auditEndTime || event.metadata?.schedule?.auditEndTime;
+
+    if (DEBUG_LOG) {
+      console.log('Current timestamp:', now);
+      console.log('Audit end time:', auditEndTime);
+      console.log('Time difference:', auditEndTime - now, 'seconds');
+    }
+
+    if (!auditEndTime) {
+      showNotification('Audit end time not found in event data', 'error');
+      return { success: false, error: 'Invalid event data' };
+    }
+
+    if (now < auditEndTime) {
+      const timeRemaining = auditEndTime - now;
+      const hoursRemaining = Math.floor(timeRemaining / 3600);
+      const minutesRemaining = Math.floor((timeRemaining % 3600) / 60);
+
+      showNotification(
+        `Cannot withdraw yet. Audit period ends in ${hoursRemaining}h ${minutesRemaining}m`,
+        'warning'
+      );
+      return { success: false, error: 'Audit period not ended' };
+    }
+
+    // Calculate available funds
+    const eventFund = event.eventFund || {};
+    const remainingFunds = eventFund.remainingFunds || 0;
+    const remainingCKB = remainingFunds / 100000000;
+
+    if (DEBUG_LOG) {
+      console.log('Event Fund data:', eventFund);
+      console.log('Remaining funds (shannons):', remainingFunds);
+      console.log('Remaining funds (CKB):', remainingCKB);
+    }
+
+    // Confirm withdrawal
+    const confirmed = confirm(
+      `Withdraw Event Funds\n\n` +
+      `This will:\n` +
+      `• Withdraw ${remainingCKB.toFixed(2)} CKB from EventFund\n` +
+      `• Clean up Metadata cell\n` +
+      `• Clean up Result cell\n` +
+      `• Return all capacity to your wallet\n\n` +
+      `The event will be permanently closed.\n\n` +
+      `Continue?`
+    );
+
+    if (!confirmed) {
+      return { success: false, error: 'User cancelled' };
+    }
+
+    showNotification('Processing withdrawal transaction...', 'info');
+
+    // Call CKB Service to execute withdrawal
+    if (!window.CKBService || !window.CKBService.withdrawEventFunds) {
+      showNotification('Withdrawal service not available', 'error');
+      return { success: false, error: 'Service not available' };
+    }
+
+    const result = await window.CKBService.withdrawEventFunds(
+      eventId,
+      organizerAddress,
+      event
+    );
+
+    if (result.success) {
+      if (DEBUG_LOG) {
+        console.log('=== WITHDRAWAL SUCCESS ===');
+        console.log('Transaction hash:', result.txHash);
+        console.log('Amount withdrawn:', result.amount);
+        console.log('==========================');
+      }
+
+      showNotification(
+        `✓ Withdrawal successful! ${(result.amount / 100000000).toFixed(2)} CKB returned to your wallet.`,
+        'success'
+      );
+
+      // Refresh balance
+      await refreshBalance();
+
+      // Reload events list
+      await loadMyEventsFromBlockchain(organizerAddress);
+
+      return result;
+    } else {
+      showNotification(`Withdrawal failed: ${result.error}`, 'error');
+      return result;
+    }
+
+  } catch (error) {
+    console.error('=== WITHDRAWAL FAILED ===');
+    console.error('Error:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('========================');
+
+    showNotification(`Withdrawal failed: ${error.message}`, 'error');
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Check if withdrawal is available for an event
+ * @param {object} event - Event object
+ * @returns {boolean} - True if withdrawal is available
+ */
+function canWithdraw(event) {
+  if (!event || !event.schedule) return false;
+
+  const now = Math.floor(Date.now() / 1000);
+  const auditEndTime = event.schedule.auditEndTime || event.metadata?.schedule?.auditEndTime;
+
+  return auditEndTime && now >= auditEndTime;
+}
+
+/**
+ * Get time until withdrawal is available
+ * @param {object} event - Event object
+ * @returns {string} - Human-readable time string
+ */
+function getWithdrawalTimeRemaining(event) {
+  if (!event || !event.schedule) return 'Unknown';
+
+  const now = Math.floor(Date.now() / 1000);
+  const auditEndTime = event.schedule.auditEndTime || event.metadata?.schedule?.auditEndTime;
+
+  if (!auditEndTime) return 'Unknown';
+  if (now >= auditEndTime) return 'Available now';
+
+  const timeRemaining = auditEndTime - now;
+  const days = Math.floor(timeRemaining / 86400);
+  const hours = Math.floor((timeRemaining % 86400) / 3600);
+  const minutes = Math.floor((timeRemaining % 3600) / 60);
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
 }
 
 // ============================================================================
@@ -2298,7 +2512,10 @@ if (typeof window !== 'undefined') {
     releaseResults,
     closeSuccessModal,
     downloadInviteMaterials,
-    copyToClipboard
+    copyToClipboard,
+    withdrawEventFunds,
+    canWithdraw,
+    getWithdrawalTimeRemaining
   });
   
   if (DEBUG_LOG) {

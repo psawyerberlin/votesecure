@@ -670,12 +670,17 @@ async function handleBallotSubmission(event) {
         }
         
         const receipt = await window.CKBService.submitBallot(ballot, currentVoter);
-        
+
         if (DEBUG_LOG) {
-            console.log('✓ Ballot submitted successfully');
+            console.log('✓ Ballot submission completed');
             console.log('Receipt:', receipt);
         }
-        
+
+        // Check if submission was successful
+        if (!receipt || !receipt.success) {
+            throw new Error(receipt?.message || 'Ballot submission failed');
+        }
+
         currentReceipt = receipt;
         showReceiptModal(receipt);
         
@@ -693,24 +698,39 @@ async function handleBallotSubmission(event) {
  */
 function showReceiptModal(receipt) {
     const modal = document.getElementById('receiptModal');
-    
+
+    if (receipt.eventId) {
+        document.getElementById('receiptEventId').textContent = receipt.eventId;
+    }
+
     if (receipt.commitmentHash) {
         document.getElementById('receiptCommitment').textContent = receipt.commitmentHash;
     }
-    
+
     if (receipt.txHash) {
         document.getElementById('receiptTxHash').textContent = receipt.txHash;
     }
-    
+
     if (receipt.timestamp) {
         const date = new Date(receipt.timestamp * 1000);
         document.getElementById('receiptTimestamp').textContent = date.toLocaleString();
     }
-    
+
     if (receipt.sequence) {
         document.getElementById('receiptSequence').textContent = receipt.sequence;
     }
-    
+
+    // Add explorer link if available
+    if (receipt.explorerUrl || receipt.txHash) {
+        const explorerUrl = receipt.explorerUrl || `https://pudge.explorer.nervos.org/transaction/${receipt.txHash}`;
+        const explorerLinkElement = document.getElementById('receiptExplorerLink');
+        if (explorerLinkElement) {
+            explorerLinkElement.href = explorerUrl;
+            explorerLinkElement.textContent = 'View on Explorer';
+            explorerLinkElement.style.display = 'inline-block';
+        }
+    }
+
     modal.style.display = 'block';
 }
 
@@ -727,21 +747,24 @@ function closeReceiptModal() {
  */
 function downloadReceipt() {
     if (!currentReceipt) return;
-    
+
     const content = `VoteSecure Ballot Receipt
 ========================
+Event ID: ${currentReceipt.eventId || 'N/A'}
 Commitment Hash: ${currentReceipt.commitmentHash}
 Transaction Hash: ${currentReceipt.txHash}
 Timestamp: ${new Date(currentReceipt.timestamp * 1000).toISOString()}
 Sequence: ${currentReceipt.sequence}
+${currentReceipt.explorerUrl ? `\nExplorer: ${currentReceipt.explorerUrl}` : ''}
 
 Save this receipt to verify your ballot was included in the final tally.`;
-    
+
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `ballot_receipt_${currentReceipt.commitmentHash.substring(0, 8)}.txt`;
+    const eventIdPart = currentReceipt.eventId ? `_${currentReceipt.eventId.substring(0, 8)}` : '';
+    a.download = `ballot_receipt${eventIdPart}_${currentReceipt.commitmentHash.substring(0, 8)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
 }
