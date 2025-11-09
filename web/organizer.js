@@ -452,6 +452,7 @@ Schedule:
 - Start: ${formatDateTime(event.metadata.schedule.startTime * 1000)}
 - End: ${formatDateTime(event.metadata.schedule.endTime * 1000)}
 - Results Release: ${formatDateTime(event.metadata.schedule.resultsReleaseTime * 1000)}
+- Audit End: ${formatDateTime(event.metadata.schedule.auditEndTime * 1000)}
 
 Eligibility: ${formatEligibilityType(event.metadata.eligibility.type)}
   `.trim();
@@ -601,10 +602,12 @@ function setDefaultDates() {
   const startTime = new Date(now.getTime() + 60 * 60 * 1000);
   const endTime = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
   const releaseTime = new Date(endTime.getTime() + 60 * 60 * 1000);
-  
+  const auditEndTime = new Date(releaseTime.getTime() + 24 * 60 * 60 * 1000); // 1 day after release
+
   document.getElementById('startTime').value = formatDateTimeLocal(startTime);
   document.getElementById('endTime').value = formatDateTimeLocal(endTime);
   document.getElementById('resultsReleaseTime').value = formatDateTimeLocal(releaseTime);
+  document.getElementById('auditEndTime').value = formatDateTimeLocal(auditEndTime);
 }
 
 async function checkPreviousConnection() {
@@ -1123,7 +1126,8 @@ function saveStepData() {
       electionConfig.schedule = {
         startTime: Math.floor(new Date(document.getElementById('startTime').value).getTime() / 1000),
         endTime: Math.floor(new Date(document.getElementById('endTime').value).getTime() / 1000),
-        resultsReleaseTime: Math.floor(new Date(document.getElementById('resultsReleaseTime').value).getTime() / 1000)
+        resultsReleaseTime: Math.floor(new Date(document.getElementById('resultsReleaseTime').value).getTime() / 1000),
+        auditEndTime: Math.floor(new Date(document.getElementById('auditEndTime').value).getTime() / 1000)
       };
       electionConfig.allowedUpdates = parseInt(document.getElementById('allowedUpdates').value) || 3;
       break;
@@ -1403,6 +1407,7 @@ function generateReview() {
         <li>Start: ${formatDateTime(electionConfig.schedule.startTime * 1000)}</li>
         <li>End: ${formatDateTime(electionConfig.schedule.endTime * 1000)}</li>
         <li>Results Release: ${formatDateTime(electionConfig.schedule.resultsReleaseTime * 1000)}</li>
+        <li>Audit End: ${formatDateTime(electionConfig.schedule.auditEndTime * 1000)}</li>
         <li>Allowed Ballot Updates: ${electionConfig.allowedUpdates}</li>
       </ul>
     </div>
@@ -1547,7 +1552,8 @@ function collectFormData() {
     schedule: {
       startTime: Math.floor(new Date(document.getElementById('startTime').value).getTime() / 1000),
       endTime: Math.floor(new Date(document.getElementById('endTime').value).getTime() / 1000),
-      resultsReleaseTime: Math.floor(new Date(document.getElementById('resultsReleaseTime').value).getTime() / 1000)
+      resultsReleaseTime: Math.floor(new Date(document.getElementById('resultsReleaseTime').value).getTime() / 1000),
+      auditEndTime: Math.floor(new Date(document.getElementById('auditEndTime').value).getTime() / 1000)
     },
     eligibility: {
       type: document.querySelector('input[name="eligibilityType"]:checked').value

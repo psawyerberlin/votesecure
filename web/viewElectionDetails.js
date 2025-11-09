@@ -194,8 +194,10 @@ function generateElectionDetailsHTML(event) {
         new Date(event.schedule.startTime * 1000).toLocaleString() : 'Not set';
     const endDate = event.schedule?.endTime ?
         new Date(event.schedule.endTime * 1000).toLocaleString() : 'Not set';
-    const resultsReleaseDate = event.schedule?.resultReleaseTime ?
-        new Date(event.schedule.resultReleaseTime * 1000).toLocaleString() : 'Not set';
+    const resultsReleaseDate = event.schedule?.resultsReleaseTime ?
+        new Date(event.schedule.resultsReleaseTime * 1000).toLocaleString() : 'Not set';
+    const auditEndDate = event.schedule?.auditEndTime ?
+        new Date(event.schedule.auditEndTime * 1000).toLocaleString() : 'Not set';
 
     // Status badge
     const statusClass = event.status === 'active' ? 'status-active' :
@@ -264,6 +266,10 @@ function generateElectionDetailsHTML(event) {
                 <div class="detail-item">
                     <strong>Results Release:</strong>
                     <span>${resultsReleaseDate}</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Audit End:</strong>
+                    <span>${auditEndDate}</span>
                 </div>
             </div>
         </div>
