@@ -6,18 +6,13 @@
  */
 
 // ============================================================================
-// CONFIGURATION
-// ============================================================================
-
-const DEBUG_LOG = true;
-
-// ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
 
 let currentEvent = null;
 let currentVoter = null;
 let currentReceipt = null;
+let blockchainReady = false;
 let ckbServiceReady = false;
 
 // ============================================================================
@@ -28,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('VoteSecure Voter Interface initializing...');
     
     // Wait for CKB Service to be ready
+    waitForBlockchainAPI();
     waitForCKBService();
     
     // Setup event listeners early so wallet button works
@@ -56,22 +52,40 @@ function waitForCKBService() {
     const checkService = () => {
         if (window.CKBService && typeof window.CKBService.connectJoyID === 'function') {
             ckbServiceReady = true;
-            if (DEBUG_LOG) console.log('✓ CKB Service ready');
+            console.log('✓ CKB Service ready');
             updateServiceStatus('ready');
             
             // Auto-reconnect if session exists
             const savedAddress = sessionStorage.getItem('joyid_address');
-            if (savedAddress && DEBUG_LOG) {
+            if (savedAddress) {
                 console.log('Found previous session, attempting reconnect...');
             }
         } else {
-            if (DEBUG_LOG) console.log('Waiting for CKB Service...');
+            console.log('Waiting for CKB Service...');
             updateServiceStatus('loading');
             setTimeout(checkService, 100);
         }
     };
     
     checkService();
+}
+
+/**
+ * Wait for Blockchain API to be available
+ */
+function waitForBlockchainAPI() {
+    const check = () => {
+        if (window?.VoteSecureBlockchain?.connectJoyID) {
+            ckbServiceReady = true;
+            console.log('✓ Blockchain API ready');
+            updateServiceStatus('ready');
+        } else {
+            console.log('Waiting for Blockchain API...');
+            updateServiceStatus('loading');
+            setTimeout(check, 100);
+        }
+    };
+    check();
 }
 
 /**
@@ -218,18 +232,16 @@ async function connectWallet() {
             btnText.innerHTML = 'Connecting...';
         }
         
-        if (DEBUG_LOG) console.log('Initiating JoyID connection...');
+        console.log('Initiating JoyID connection...');
         
-        // Connect via CKB Service with CCC + JoyID
-        const walletInfo = await window.CKBService.connectJoyID();
+        // Connect via VoteSecureBlockchain (delegates to CKB Service Bridge)
+        const walletInfo = await window.VoteSecureBlockchain.connectJoyID();
         
-        if (DEBUG_LOG) {
-            console.log('JoyID connection successful:', {
-                address: truncateAddress(walletInfo.address),
-                balance: walletInfo.balance,
-                network: walletInfo.network
-            });
-        }
+        console.log('JoyID connection successful:', {
+            address: truncateAddress(walletInfo.address),
+            balance: walletInfo.balance,
+            network: walletInfo.network
+        });
         
         currentVoter = walletInfo.address;
         
@@ -241,7 +253,7 @@ async function connectWallet() {
         // Update UI - this adds 'connected' class and changes button color
         updateWalletUI(true);
         
-        if (DEBUG_LOG) console.log('✓ Wallet connected successfully');
+        console.log('✓ Wallet connected successfully');
         
         // Hide wallet connection prompt, show voting interface
         const walletRequired = document.getElementById('walletRequired');
@@ -373,12 +385,14 @@ async function loadElection(eventId) {
         document.getElementById('walletRequired').style.display = 'none';
         document.getElementById('electionIdInput').style.display = 'none';
         
-        // Use CKB Service to fetch election from blockchain
-        if (!window.CKBService || !window.CKBService.getEvent) {
-            throw new Error('CKB Service not ready');
+        // Use service to fetch election
+        const service = window.CKBService || window.VoteSecureBlockchain;
+        
+        if (!service || !service.getEvent) {
+            throw new Error('Service does not have getEvent method');
         }
         
-        const event = await window.CKBService.getEvent(eventId);
+        const event = await service.getEvent(eventId);
         
         if (!event) {
             showError('Election not found. Please check your invitation link.');
@@ -386,7 +400,7 @@ async function loadElection(eventId) {
         }
         
         currentEvent = event;
-        if (DEBUG_LOG) console.log('✓ Election loaded:', event);
+        console.log('✓ Election loaded:', event);
         
         // Render election UI
         renderElectionHeader();
@@ -397,7 +411,7 @@ async function loadElection(eventId) {
         const savedAddress = sessionStorage.getItem('joyid_address');
         if (savedAddress) {
             currentVoter = savedAddress;
-            updateWalletUI(true);
+            updateWalletStatus(savedAddress);
             document.getElementById('votingInterface').style.display = 'block';
             document.getElementById('walletRequired').style.display = 'none';
         } else {
@@ -424,37 +438,20 @@ async function loadElection(eventId) {
  */
 function renderElectionHeader() {
     if (!currentEvent) return;
-
+    
     document.getElementById('electionTitle').textContent = currentEvent.title || 'Election';
-
+    
     if (currentEvent.description) {
         document.getElementById('electionDescription').innerHTML = `<p>${currentEvent.description}</p>`;
     }
-
-    // Update election status with appropriate styling
-    const statusEl = document.getElementById('electionStatus');
-    const status = currentEvent.status || 'pending';
-
-    // Remove all status classes
-    statusEl.classList.remove('status-active', 'status-ended', 'status-pending');
-
-    // Set text and add appropriate class
-    if (status === 'active') {
-        statusEl.textContent = 'Active';
-        statusEl.classList.add('status-active');
-    } else if (status === 'concluded' || status === 'ended') {
-        statusEl.textContent = 'Concluded';
-        statusEl.classList.add('status-ended');
-    } else {
-        statusEl.textContent = 'Pending';
-        statusEl.classList.add('status-pending');
-    }
-
+    
+    document.getElementById('electionStatus').textContent = currentEvent.status === 'active' ? 'Active' : 'Concluded';
+    
     if (currentEvent.endTime) {
         const date = new Date(currentEvent.endTime * 1000);
         document.getElementById('electionEndTime').textContent = date.toLocaleString();
     }
-
+    
     if (currentEvent.participantCount !== undefined) {
         document.getElementById('participantCount').textContent = currentEvent.participantCount;
     }
@@ -465,60 +462,29 @@ function renderElectionHeader() {
  */
 function renderQuestions() {
     if (!currentEvent || !currentEvent.questions) return;
-
+    
     const container = document.getElementById('questionsContainer');
     container.innerHTML = '';
-
-    if (DEBUG_LOG) {
-        console.log('=== RENDERING QUESTIONS ===');
-        console.log('Total questions:', currentEvent.questions.length);
-    }
-
+    
     currentEvent.questions.forEach((question, idx) => {
-        if (DEBUG_LOG) {
-            console.log(`Question ${idx + 1}:`, {
-                text: question.text,
-                type: question.type,
-                multiSelect: question.multiSelect,
-                options: question.options?.length
-            });
-        }
-
         const questionDiv = document.createElement('div');
         questionDiv.className = 'question-group';
-
+        
         const questionLabel = document.createElement('label');
         questionLabel.className = 'question-label';
         questionLabel.textContent = question.text || `Question ${idx + 1}`;
         questionDiv.appendChild(questionLabel);
-
-        // Add question type hint
-        const questionType = document.createElement('div');
-        questionType.className = 'question-type-hint';
-        const isMultipleChoice = question.type === 'multiple' || question.multiSelect === true;
-        questionType.textContent = isMultipleChoice ?
-            '(Select one or more options)' :
-            '(Select one option)';
-        questionType.style.fontSize = '0.875rem';
-        questionType.style.color = 'var(--gray)';
-        questionType.style.marginBottom = '0.75rem';
-        questionDiv.appendChild(questionType);
-
-        if (DEBUG_LOG) {
-            console.log(`Question ${idx + 1} is multiple choice:`, isMultipleChoice);
-        }
-
+        
         const optionsDiv = document.createElement('div');
         optionsDiv.className = 'options';
-
+        
         question.options.forEach((option) => {
             const optionDiv = document.createElement('div');
             optionDiv.className = 'option-item';
-
+            
             const inputId = `option_${idx}_${option.id}`;
             const input = document.createElement('input');
-            // Check both question.type and question.multiSelect for multiple choice
-            input.type = (question.type === 'multiple' || question.multiSelect === true) ? 'checkbox' : 'radio';
+            input.type = question.multiSelect ? 'checkbox' : 'radio';
             input.id = inputId;
             input.name = `question_${idx}`;
             input.value = option.id;
@@ -589,8 +555,6 @@ async function handleBallotSubmission(event) {
     }
     
     try {
-        if (DEBUG_LOG) console.log('=== BALLOT SUBMISSION STARTED ===');
-        
         // Collect ballot answers
         const ballot = {
             eventId: currentEvent.eventId,
@@ -599,51 +563,15 @@ async function handleBallotSubmission(event) {
             timestamp: Math.floor(Date.now() / 1000)
         };
         
-        if (DEBUG_LOG) {
-            console.log('Event ID:', currentEvent.eventId);
-            console.log('Voter address:', currentVoter);
-            console.log('Timestamp:', ballot.timestamp);
-        }
-        
         // Collect question answers
-        let validationErrors = [];
         currentEvent.questions.forEach((question, idx) => {
             const groupName = `question_${idx}`;
             const inputs = document.querySelectorAll(`input[name="${groupName}"]:checked`);
-            const isMultipleChoice = question.type === 'multiple' || question.multiSelect === true;
-
-            if (DEBUG_LOG) {
-                console.log(`Question ${idx + 1} (${question.text}):`, {
-                    type: question.type,
-                    isMultipleChoice: isMultipleChoice,
-                    selectedCount: inputs.length,
-                    selectedValues: Array.from(inputs).map(i => i.value)
-                });
-            }
-
-            // Validation: single-choice should have exactly 1 answer
-            if (!isMultipleChoice && inputs.length > 1) {
-                validationErrors.push(`Question ${idx + 1}: Multiple selections not allowed for single choice question`);
-            }
-
-            // Validation: at least one answer required
-            if (inputs.length === 0) {
-                validationErrors.push(`Question ${idx + 1}: Please select at least one option`);
-            }
-
+            
             if (inputs.length > 0) {
                 ballot.answers[question.id] = Array.from(inputs).map(i => i.value);
             }
         });
-
-        // Check for validation errors
-        if (validationErrors.length > 0) {
-            if (DEBUG_LOG) {
-                console.error('Validation errors:', validationErrors);
-            }
-            showError('Please answer all questions:\n' + validationErrors.join('\n'));
-            return;
-        }
         
         // Collect grouping data if present
         if (currentEvent.groupingFields) {
@@ -655,40 +583,22 @@ async function handleBallotSubmission(event) {
             });
         }
         
-        if (DEBUG_LOG) {
-            console.log('=== BALLOT COLLECTED ===');
-            console.log('Complete ballot object:', ballot);
-            console.log('Answers by question:', ballot.answers);
-            console.log('Grouping data:', ballot.groupingData);
-            console.log('========================');
-            console.log('Submitting ballot to CKB Service...');
+        console.log('Submitting ballot:', ballot);
+        
+        // Submit ballot via service
+        const service = window.CKBService || window.VoteSecureBlockchain;
+        if (!service || !service.submitBallot) {
+            throw new Error('Service does not have submitBallot method');
         }
         
-        // Submit ballot via CKB Service
-        if (!window.CKBService || !window.CKBService.submitBallot) {
-            throw new Error('CKB Service not ready');
-        }
+        const receipt = await service.submitBallot(ballot, currentVoter);
+        console.log('✓ Ballot submitted:', receipt);
         
-        const receipt = await window.CKBService.submitBallot(ballot, currentVoter);
-
-        if (DEBUG_LOG) {
-            console.log('✓ Ballot submission completed');
-            console.log('Receipt:', receipt);
-        }
-
-        // Check if submission was successful
-        if (!receipt || !receipt.success) {
-            throw new Error(receipt?.message || 'Ballot submission failed');
-        }
-
         currentReceipt = receipt;
         showReceiptModal(receipt);
         
     } catch (error) {
-        console.error('=== BALLOT SUBMISSION FAILED ===');
-        console.error('Error:', error);
-        console.error('Error message:', error.message);
-        console.error('Error stack:', error.stack);
+        console.error('Ballot submission failed:', error);
         showError(`Failed to submit ballot: ${error.message}`);
     }
 }
@@ -698,39 +608,24 @@ async function handleBallotSubmission(event) {
  */
 function showReceiptModal(receipt) {
     const modal = document.getElementById('receiptModal');
-
-    if (receipt.eventId) {
-        document.getElementById('receiptEventId').textContent = receipt.eventId;
-    }
-
+    
     if (receipt.commitmentHash) {
         document.getElementById('receiptCommitment').textContent = receipt.commitmentHash;
     }
-
+    
     if (receipt.txHash) {
         document.getElementById('receiptTxHash').textContent = receipt.txHash;
     }
-
+    
     if (receipt.timestamp) {
         const date = new Date(receipt.timestamp * 1000);
         document.getElementById('receiptTimestamp').textContent = date.toLocaleString();
     }
-
+    
     if (receipt.sequence) {
         document.getElementById('receiptSequence').textContent = receipt.sequence;
     }
-
-    // Add explorer link if available
-    if (receipt.explorerUrl || receipt.txHash) {
-        const explorerUrl = receipt.explorerUrl || `https://pudge.explorer.nervos.org/transaction/${receipt.txHash}`;
-        const explorerLinkElement = document.getElementById('receiptExplorerLink');
-        if (explorerLinkElement) {
-            explorerLinkElement.href = explorerUrl;
-            explorerLinkElement.textContent = 'View on Explorer';
-            explorerLinkElement.style.display = 'inline-block';
-        }
-    }
-
+    
     modal.style.display = 'block';
 }
 
@@ -747,24 +642,21 @@ function closeReceiptModal() {
  */
 function downloadReceipt() {
     if (!currentReceipt) return;
-
+    
     const content = `VoteSecure Ballot Receipt
 ========================
-Event ID: ${currentReceipt.eventId || 'N/A'}
 Commitment Hash: ${currentReceipt.commitmentHash}
 Transaction Hash: ${currentReceipt.txHash}
 Timestamp: ${new Date(currentReceipt.timestamp * 1000).toISOString()}
 Sequence: ${currentReceipt.sequence}
-${currentReceipt.explorerUrl ? `\nExplorer: ${currentReceipt.explorerUrl}` : ''}
 
 Save this receipt to verify your ballot was included in the final tally.`;
-
+    
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    const eventIdPart = currentReceipt.eventId ? `_${currentReceipt.eventId.substring(0, 8)}` : '';
-    a.download = `ballot_receipt${eventIdPart}_${currentReceipt.commitmentHash.substring(0, 8)}.txt`;
+    a.download = `ballot_receipt_${currentReceipt.commitmentHash.substring(0, 8)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -787,11 +679,12 @@ async function handleVerification(event) {
             return;
         }
         
-        if (!window.CKBService || !window.CKBService.verifyBallot) {
-            throw new Error('Ballot verification not yet implemented');
+        const service = window.CKBService || window.VoteSecureBlockchain;
+        if (!service || !service.verifyBallot) {
+            throw new Error('Service does not have verifyBallot method');
         }
         
-        const result = await window.CKBService.verifyBallot(currentEvent.eventId, commitmentHash);
+        const result = await service.verifyBallot(currentEvent.eventId, commitmentHash);
         
         const resultDiv = document.getElementById('verificationResult');
         if (result.included) {
@@ -885,31 +778,12 @@ function showResults() {
 /**
  * Check if there's a previous wallet connection in session
  */
-async function checkPreviousConnection() {
-    try {
-        // Check CKB Service for existing JoyID session
-        if (!window.CKBService || !window.CKBService.checkJoyIDSession) {
-            if (DEBUG_LOG) console.log('CKB Service not ready for session check');
-            return;
-        }
-        
-        const session = await window.CKBService.checkJoyIDSession();
-        
-        if (session && session.address) {
-            if (DEBUG_LOG) console.log('Found previous session:', truncateAddress(session.address));
-            currentVoter = session.address;
-            
-            // Update session storage with latest data
-            sessionStorage.setItem('joyid_address', session.address);
-            sessionStorage.setItem('joyid_balance', session.balance);
-            sessionStorage.setItem('joyid_network', session.network);
-            
-            updateWalletUI(true);
-        } else {
-            if (DEBUG_LOG) console.log('No previous session found');
-        }
-    } catch (error) {
-        console.error('Error checking previous connection:', error);
+function checkPreviousConnection() {
+    const savedAddress = sessionStorage.getItem('joyid_address');
+    if (savedAddress) {
+        console.log('Found previous session:', truncateAddress(savedAddress));
+        currentVoter = savedAddress;
+        updateWalletUI(true);
     }
 }
 

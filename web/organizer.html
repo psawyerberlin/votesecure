@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Election - VoteSecure</title>
-	<link rel="stylesheet" href="common.css">
-	<link rel="stylesheet" href="organizer.css">
+    <link rel="stylesheet" href="votesecure.css">
 </head>
 <body class="organizer-page">
     <!-- Navigation -->
@@ -31,7 +30,7 @@
                         <rect x="3" y="7" width="18" height="13" rx="2"></rect>
                         <path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2"></path>
                     </svg>
-                    <span class="btn-text">Connect JoyID</span>
+                    <span class="btn-text">Connect Wallet</span>
                 </button>
             </div>
         </div>
@@ -83,70 +82,77 @@
                         
                         <div class="form-group">
                             <label for="electionTitle">Election Title *</label>
-                            <input type="text" id="electionTitle" required placeholder="e.g., Annual Board Election 2025" value="Title Test">  <!-- ### remove Value -->
+                            <input type="text" id="electionTitle" required placeholder="e.g., Annual Board Election 2025">
                         </div>
                         
-						<div class="form-group">
-							<label for="electionDescription">Description</label>
-							<textarea id="electionDescription" rows="4" placeholder="Describe the purpose and context of this election (Markdown supported)">Description Test</textarea>  <!-- ### remove Description Test -->
-							<small>Supports Markdown formatting. HTML tags are sanitized.</small>
-						</div>
+                        <div class="form-group">
+                            <label for="electionDescription">Description</label>
+                            <textarea id="electionDescription" rows="4" placeholder="Describe the purpose and context of this election (Markdown supported)"></textarea>
+                            <small>Supports Markdown formatting. HTML tags are sanitized.</small>
+                        </div>
                         
                         <div class="form-group">
                             <label for="estimatedVoters">Estimated Number of Voters *</label>
-                            <input type="number" id="estimatedVoters" required min="1" value="10"> <!-- ### set to 100 -->
+                            <input type="number" id="estimatedVoters" required min="1" value="100">
                             <small>Used to estimate blockchain costs</small>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" onclick="nextStep()" class="btn btn-primary">
+                                Next Step →
+                            </button>
                         </div>
                     </div>
 
                     <!-- Step 2: Questions -->
                     <div class="form-step" data-step="2">
-                        <h2>Questions & Options</h2>
+                        <h2>Questions & Choices</h2>
                         
-                        <div id="questionsContainer">
-                            <!-- Questions will be added dynamically -->
-                        </div>
+                        <div id="questionsContainer"></div>
                         
                         <button type="button" onclick="addQuestion()" class="btn btn-secondary">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <line x1="12" y1="8" x2="12" y2="16"></line>
-                                <line x1="8" y1="12" x2="16" y2="12"></line>
-                            </svg>
-                            Add Question
+                            + Add Another Question
                         </button>
+                        
+                        <div class="form-actions">
+                            <button type="button" onclick="previousStep()" class="btn btn-secondary">
+                                ← Previous
+                            </button>
+                            <button type="button" onclick="nextStep()" class="btn btn-primary">
+                                Next Step →
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Step 3: Schedule -->
                     <div class="form-step" data-step="3">
-                        <h2>Schedule</h2>
+                        <h2>Election Schedule</h2>
                         
                         <div class="form-group">
-                            <label for="startTime">Voting Start Time *</label>
+                            <label for="startTime">Start Time *</label>
                             <input type="datetime-local" id="startTime" required>
+                            <small>When voting opens</small>
                         </div>
                         
                         <div class="form-group">
-                            <label for="endTime">Voting End Time *</label>
+                            <label for="endTime">End Time *</label>
                             <input type="datetime-local" id="endTime" required>
+                            <small>When voting closes</small>
                         </div>
                         
                         <div class="form-group">
                             <label for="resultsReleaseTime">Results Release Time *</label>
                             <input type="datetime-local" id="resultsReleaseTime" required>
-                            <small>Results will be locked until this time and require threshold confirmations</small>
+                            <small>When results become public</small>
                         </div>
-
-                        <div class="form-group">
-                            <label for="auditEndTime">Audit End Time *</label>
-                            <input type="datetime-local" id="auditEndTime" required>
-                            <small>After this time, audit period ends and results are final</small>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="allowedUpdates">Allowed Ballot Updates *</label>
-                            <input type="number" id="allowedUpdates" min="1" max="10" value="3" required>
-                            <small>Number of times voters can change their ballot</small>
+                        
+                        <div class="form-actions">
+                            <button type="button" onclick="previousStep()" class="btn btn-secondary">
+                                ← Previous
+                            </button>
+                            <button type="button" onclick="nextStep()" class="btn btn-primary">
+                                Next Step →
+                            </button>
                         </div>
                     </div>
 
@@ -155,13 +161,13 @@
                         <h2>Voter Eligibility</h2>
                         
                         <div class="form-group">
-                            <label>Eligibility Type *</label>
+                            <label>Who can vote?</label>
                             <div class="radio-group">
                                 <label class="radio-option">
                                     <input type="radio" name="eligibilityType" value="public" checked>
                                     <div class="radio-content">
                                         <strong>Public</strong>
-                                        <p>Anyone with the link can vote (Sybil risk)</p>
+                                        <small>Anyone with the link can vote</small>
                                     </div>
                                 </label>
                                 
@@ -169,7 +175,7 @@
                                     <input type="radio" name="eligibilityType" value="invite_key">
                                     <div class="radio-content">
                                         <strong>Invite Key</strong>
-                                        <p>Single shared key required to vote</p>
+                                        <small>Voters need a shared key</small>
                                     </div>
                                 </label>
                                 
@@ -177,7 +183,7 @@
                                     <input type="radio" name="eligibilityType" value="per_voter">
                                     <div class="radio-content">
                                         <strong>Per-Voter Keys</strong>
-                                        <p>Unique key for each voter (most secure)</p>
+                                        <small>Each voter gets unique credentials</small>
                                     </div>
                                 </label>
                                 
@@ -185,68 +191,69 @@
                                     <input type="radio" name="eligibilityType" value="curated_list">
                                     <div class="radio-content">
                                         <strong>Curated List</strong>
-                                        <p>Pre-approved voter list (JoyID addresses)</p>
+                                        <small>Only approved addresses can vote</small>
                                     </div>
                                 </label>
                             </div>
                         </div>
                         
-                        <div id="voterListContainer" style="display: none;">
+                        <div class="eligibility-detail" data-type="per_voter" style="display: none;">
                             <div class="form-group">
-                                <label>Voter List (one email per line)</label>
-                                <textarea id="voterList" rows="6" placeholder="voter1@example.com&#10;voter2@example.com&#10;voter3@example.com"></textarea>
-                                <small>Emails used only for distribution, never stored on-chain</small>
+                                <label for="voterList">Voter Addresses (one per line)</label>
+                                <textarea id="voterList" rows="6" placeholder="ckt1q...&#10;ckt1q..."></textarea>
                             </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="enableCaptcha">
-                                Enable CAPTCHA (reduces bot voting)
-                            </label>
+                        <div class="eligibility-detail" data-type="curated_list" style="display: none;">
+                            <div class="form-group">
+                                <label for="voterList">Approved Voter Addresses (one per line)</label>
+                                <textarea id="voterList" rows="6" placeholder="ckt1q...&#10;ckt1q..."></textarea>
+                            </div>
                         </div>
                         
-                        <div class="form-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="enableRateLimit" checked>
-                                Enable Rate Limiting (recommended)
-                            </label>
+                        <div class="form-actions">
+                            <button type="button" onclick="previousStep()" class="btn btn-secondary">
+                                ← Previous
+                            </button>
+                            <button type="button" onclick="nextStep()" class="btn btn-primary">
+                                Next Step →
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Step 5: Privacy & Reporting -->
+                    <!-- Step 5: Privacy Settings -->
                     <div class="form-step" data-step="5">
                         <h2>Privacy & Reporting</h2>
                         
                         <div class="form-group">
-                            <label>Anonymity Level *</label>
+                            <label>Anonymity Level</label>
                             <div class="radio-group">
                                 <label class="radio-option">
                                     <input type="radio" name="anonymityLevel" value="full" checked>
                                     <div class="radio-content">
                                         <strong>Full Anonymity</strong>
-                                        <p>Individual votes never exposed</p>
+                                        <small>Ballots cannot be linked to voters</small>
                                     </div>
                                 </label>
                                 
                                 <label class="radio-option">
-                                    <input type="radio" name="anonymityLevel" value="group">
+                                    <input type="radio" name="anonymityLevel" value="verifiable">
                                     <div class="radio-content">
-                                        <strong>Group Anonymity</strong>
-                                        <p>Results by group with k-anonymity</p>
+                                        <strong>Verifiable</strong>
+                                        <small>Voters can verify their ballot was counted</small>
                                     </div>
                                 </label>
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label>Reporting Granularity *</label>
+                            <label>Reporting Granularity</label>
                             <div class="radio-group">
                                 <label class="radio-option">
                                     <input type="radio" name="reportingGranularity" value="totals_only" checked>
                                     <div class="radio-content">
                                         <strong>Totals Only</strong>
-                                        <p>Show aggregate results only</p>
+                                        <small>Show overall results only</small>
                                     </div>
                                 </label>
                                 
@@ -254,74 +261,80 @@
                                     <input type="radio" name="reportingGranularity" value="by_group">
                                     <div class="radio-content">
                                         <strong>By Group</strong>
-                                        <p>Break down by grouping fields</p>
+                                        <small>Break down by demographics</small>
                                     </div>
                                 </label>
                             </div>
                         </div>
                         
-                        <div id="groupingContainer" style="display: none;">
+                        <div id="groupingFieldsSection" style="display: none;">
                             <div class="form-group">
                                 <label>Grouping Fields</label>
-                                <input type="text" id="groupingFields" placeholder="e.g., city, age_group, department">
-                                <small>Comma-separated field names voters will provide</small>
+                                <div id="groupingFieldsList" class="checkbox-group">
+                                    <label>
+                                        <input type="checkbox" value="age_range">
+                                        Age Range
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" value="location">
+                                        Location
+                                    </label>
+                                    <label>
+                                        <input type="checkbox" value="department">
+                                        Department
+                                    </label>
+                                </div>
                             </div>
                             
                             <div class="form-group">
-                                <label for="minGroupSize">Minimum Group Size (k-anonymity) *</label>
-                                <input type="number" id="minGroupSize" min="2" value="5">
-                                <small>Groups smaller than this will be merged</small>
+                                <label for="minGroupSize">Minimum Group Size</label>
+                                <input type="number" id="minGroupSize" value="5" min="1">
+                                <small>Minimum voters per group to show results</small>
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label>Live Statistics Mode *</label>
+                            <label>Live Statistics</label>
                             <div class="radio-group">
                                 <label class="radio-option">
                                     <input type="radio" name="liveStatsMode" value="hidden" checked>
                                     <div class="radio-content">
-                                        <strong>Hidden Until Release</strong>
-                                        <p>Show participation only, no results</p>
+                                        <strong>Hidden</strong>
+                                        <small>No live stats during voting</small>
+                                    </div>
+                                </label>
+                                
+                                <label class="radio-option">
+                                    <input type="radio" name="liveStatsMode" value="participation">
+                                    <div class="radio-content">
+                                        <strong>Participation Only</strong>
+                                        <small>Show turnout but not results</small>
                                     </div>
                                 </label>
                                 
                                 <label class="radio-option">
                                     <input type="radio" name="liveStatsMode" value="realtime">
                                     <div class="radio-content">
-                                        <strong>Real-Time</strong>
-                                        <p>Show live aggregate results</p>
+                                        <strong>Real-time Results</strong>
+                                        <small>Show live vote counts</small>
                                     </div>
                                 </label>
                             </div>
                         </div>
                         
                         <div class="form-group">
-                            <label>Result Disclosure Policy *</label>
-                            <div class="radio-group">
-                                <label class="radio-option">
-                                    <input type="radio" name="resultPolicy" value="public" checked>
-                                    <div class="radio-content">
-                                        <strong>Public</strong>
-                                        <p>Anyone can view results</p>
-                                    </div>
-                                </label>
-                                
-                                <label class="radio-option">
-                                    <input type="radio" name="resultPolicy" value="invite_key">
-                                    <div class="radio-content">
-                                        <strong>Invite Key Required</strong>
-                                        <p>Same key needed to view results</p>
-                                    </div>
-                                </label>
-                                
-                                <label class="radio-option">
-                                    <input type="radio" name="resultPolicy" value="private">
-                                    <div class="radio-content">
-                                        <strong>Private</strong>
-                                        <p>Only organizer and voters</p>
-                                    </div>
-                                </label>
-                            </div>
+                            <label for="allowedUpdates">Allowed Vote Updates</label>
+                            <input type="number" id="allowedUpdates" value="3" min="1" max="10">
+                            <small>How many times voters can change their vote</small>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="button" onclick="previousStep()" class="btn btn-secondary">
+                                ← Previous
+                            </button>
+                            <button type="button" onclick="nextStep()" class="btn btn-primary">
+                                Review →
+                            </button>
                         </div>
                     </div>
 
@@ -329,166 +342,89 @@
                     <div class="form-step" data-step="6">
                         <h2>Review & Publish</h2>
                         
-                        <div class="review-section">
-                            <h3>Election Summary</h3>
-                            <div id="reviewSummary"></div>
-                        </div>
+                        <div id="reviewContent"></div>
                         
-                        <div class="cost-estimate">
-                            <h3>Cost Estimate</h3>
-                            <div id="costBreakdown"></div>
+                        <div class="form-actions">
+                            <button type="button" onclick="previousStep()" class="btn btn-secondary">
+                                ← Edit
+                            </button>
+                            <button type="button" id="confirmPublishBtn" onclick="confirmPublish()" class="btn btn-primary btn-lg">
+                                📋 Publish to Blockchain
+                            </button>
                         </div>
-                        
-                        <div class="warning-box">
-                            <strong>⚠️ Important:</strong>
-                            <ul>
-                                <li>Election configuration cannot be changed after publishing</li>
-                                <li>You will fund the election with CKB tokens</li>
-                                <li>Unused funds will be returned after the election</li>
-                                <li>Make sure your JoyID wallet is connected and funded</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Form Navigation -->
-                    <div class="form-navigation">
-                        <button type="button" id="prevBtn" onclick="previousStep()" class="btn btn-secondary">
-                            Previous
-                        </button>
-                        <button type="button" id="nextBtn" onclick="nextStep()" class="btn btn-primary">
-                            Next
-                        </button>
-                        <button type="submit" id="publishBtn" style="display: none;" class="btn btn-primary btn-lg">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
-                                <path d="M22 4L12 14.01l-3-3"></path>
-                            </svg>
-                            Publish Election
-                        </button>
                     </div>
                 </form>
             </div>
 
-			<!-- My Elections View -->
-			<div id="electionsListView" style="display: none;">
-				<div class="page-header">
-					<h1>My Elections</h1>
-					<div class="page-actions">
-						<!-- Refresh -->
-						<button onclick="loadMyEventsFromBlockchain(currentOrganizer?.address)" 
-								class="btn btn-secondary" 
-								title="Reload from cache">
-							🔄 Refresh
-						</button>
-						
-						<!-- Recovery dropdown -->
-						<div class="dropdown" style="position: relative; display: inline-block;">
-							<button class="btn btn-secondary" onclick="toggleRecoveryMenu(event)">
-								🔧 Recovery ▼
-							</button>
-							<div class="dropdown-menu" id="recoveryMenu" 
-								 style="display: none; position: absolute; top: 100%; right: 0; 
-										background: white; border: 1px solid #ddd; border-radius: 4px;
-										box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 200px;
-										margin-top: 5px; z-index: 1000;">
-								<button onclick="showRecoverDialog(); event.stopPropagation();" 
-										style="display: block; width: 100%; padding: 10px 16px; 
-											   text-align: left; background: none; border: none;
-											   cursor: pointer; color: #333;">
-									➕ Add by Event ID
-								</button>
-								<hr style="margin: 5px 0; border-top: 1px solid #e0e0e0;">
-								<button onclick="exportElectionIds(); event.stopPropagation();" 
-										style="display: block; width: 100%; padding: 10px 16px;
-											   text-align: left; background: none; border: none;
-											   cursor: pointer; color: #333;">
-									💾 Export Backup
-								</button>
-								<button onclick="importElectionIds(); event.stopPropagation();"
-										style="display: block; width: 100%; padding: 10px 16px;
-											   text-align: left; background: none; border: none;
-											   cursor: pointer; color: #333;">
-									📥 Import Backup
-								</button>
-								<hr style="margin: 5px 0; border-top: 1px solid #e0e0e0;">
-								<button onclick="clearAllCacheData(); event.stopPropagation();"
-										style="display: block; width: 100%; padding: 10px 16px;
-											   text-align: left; background: none; border: none;
-											   cursor: pointer; color: #dc3545;">
-									🗑️ Clear All Cache
-								</button>
-							</div>
-						</div>
-						
-						<!-- Create new -->
-						<button onclick="showCreateView()" class="btn btn-primary">
-							➕ Create New
-						</button>
-					</div>
-				</div>
-				
-				<!-- Info banner -->
-				<div style="background: #e3f2fd; border-left: 4px solid #2196f3; 
-							padding: 12px 16px; margin-bottom: 20px; border-radius: 4px;">
-					<strong>💡 Tip:</strong> Elections are saved in your browser. 
-					If an election is missing, use <strong>Recovery → Add by Event ID</strong>.
-				</div>
-				
-				<!-- Elections list -->
-				<div id="electionsList" class="elections-list">
-					<p>Loading elections...</p>
-				</div>
-			</div>
-
-            <!-- Success Modal -->
-            <div id="successModal" class="modal" style="display: none;">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2>✓ Election Published!</h2>
-                        <button class="modal-close" onclick="closeSuccessModal()">&times;</button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="success-message">
-                            <p>Your election has been successfully published to the blockchain.</p>
-                        </div>
-                        
-                        <div class="published-info">
-                            <div class="info-field">
-                                <label>Event ID:</label>
-                                <div class="value" id="publishedEventId">--</div>
-                            </div>
-                            
-                            <div class="info-field">
-                                <label>Voter URL:</label>
-                                <div class="url-display" id="publishedUrl">--</div>
-                                <button onclick="copyToClipboard('publishedUrl')" class="btn-copy">Copy</button>
-                            </div>
-                            
-                            <div class="info-field">
-                                <label>QR Code:</label>
-                                <div id="publishedQRCode"></div>
-                            </div>
-                            
-                            <div id="inviteKeySection" class="info-field" style="display: none;">
-                                <label>Invite Key:</label>
-                                <div class="value" id="publishedInviteKey">--</div>
-                                <button onclick="copyToClipboard('publishedInviteKey')" class="btn-copy">Copy</button>
-                            </div>
-                        </div>
-                        
-                        <div class="modal-actions">
-                            <button onclick="downloadInviteMaterials()" class="btn btn-secondary">
-                                Download Invite Materials
-                            </button>
-                            <button onclick="showMyElections()" class="btn btn-primary">
-                                View My Elections
-                            </button>
-                        </div>
-                    </div>
+            <!-- My Elections View -->
+            <div id="myElectionsView" style="display: none;">
+                <div class="page-header">
+                    <h1>My Elections</h1>
+                    <button onclick="showCreateView()" class="btn btn-primary">
+                        + Create New Election
+                    </button>
                 </div>
+                
+                <div id="electionsList" class="elections-list"></div>
             </div>
         </div>
     </main>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-overlay" onclick="closeSuccessModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🎉 Election Published!</h2>
+                <button onclick="closeSuccessModal()" class="modal-close">×</button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="success-info">
+                    <div class="info-field">
+                        <label>Event ID:</label>
+                        <div class="value" id="publishedEventId">--</div>
+                        <button onclick="copyToClipboard('publishedEventId')" class="btn-copy">Copy</button>
+                    </div>
+                    
+                    <div class="info-field">
+                        <label>Transaction Hash:</label>
+                        <div class="value" id="publishedTxHash">--</div>
+                        <button onclick="copyToClipboard('publishedTxHash')" class="btn-copy">Copy</button>
+                    </div>
+                    
+                    <div class="info-field">
+                        <label>Voter URL:</label>
+                        <div class="value" id="publishedVoterUrl">--</div>
+                        <button onclick="copyToClipboard('publishedVoterUrl')" class="btn-copy">Copy</button>
+                    </div>
+                    
+                    <div class="info-field">
+                        <label>QR Code:</label>
+                        <div id="publishedQRCode"></div>
+                    </div>
+                    
+                    <div id="inviteKeySection" class="info-field" style="display: none;">
+                        <label>Invite Key:</label>
+                        <div class="value" id="publishedInviteKey">--</div>
+                        <button onclick="copyToClipboard('publishedInviteKey')" class="btn-copy">Copy</button>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button onclick="downloadInviteMaterials()" class="btn btn-secondary">
+                        Download Invite Materials
+                    </button>
+                    <button onclick="showMyElections()" class="btn btn-primary">
+                        View My Elections
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer" class="notification-container"></div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -497,43 +433,35 @@
         </div>
     </footer>
 
-	<!-- =============================================  -->
-    <!-- ========== Connection to Services ===========  -->
-	<!-- =============================================  -->
+    <!-- Scripts: Load in correct order for CCC integration -->
+    
+    <!-- 1. React & ReactDOM from CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- 2. ES Module Shims for import maps -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@2/dist/es-module-shims.js"></script>
+    
+    <!-- 3. Import Map for CCC (React loaded from UMD above) -->
+    <script type="importmap">
+    {
+      "imports": {
+        "@ckb-ccc/connector-react": "https://esm.sh/@ckb-ccc/connector-react@1.0.29?bundle&target=es2022&external=react,react-dom"
+      }
+    }
+    </script>
 
-	<!-- Buffer Polyfill (for Node.js Buffer compatibility in browser) -->
-	<script type="module">
-		import { Buffer } from 'https://cdn.jsdelivr.net/npm/buffer@6.0.3/+esm';
-		window.Buffer = Buffer;
-	</script>
-
-	<script type="importmap">
-	{
-	  "imports": {
-		"@ckb-ccc/connector-react": "https://esm.sh/@ckb-ccc/connector-react@1.0.29?bundle&target=es2022"
-	  }
-	}
-	</script>
-
-	<script type="module" src="../src/ckbService_ccc.js"></script>
-	<script src="organizer.js"></script>
-
-	<script>
-	function toggleRecoveryMenu(event) {
-		event.stopPropagation();
-		const menu = document.getElementById('recoveryMenu');
-		const isVisible = menu.style.display === 'block';
-		menu.style.display = isVisible ? 'none' : 'block';
-	}
-
-	// Close dropdown when clicking outside
-	document.addEventListener('click', function(event) {
-		const menu = document.getElementById('recoveryMenu');
-		if (menu && menu.style.display === 'block') {
-			menu.style.display = 'none';
-		}
-	});
-	</script>
+    <!-- 4. CKB Service Bridge (ES Module) -->
+    <script type="module" src="../src/ckbServiceBridge.js"></script>
+    
+    <!-- 5. Blockchain Module -->
+    <script type="module" src="../src/blockchain.js"></script>
+    
+    <!-- 6. Wallet Connector (React Component) -->
+    <script type="module" src="../src/walletConnector.js"></script>
+    
+    <!-- 7. Organizer Script -->
+    <script defer src="organizer.js"></script>
 
 </body>
 </html>

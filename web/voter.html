@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vote - VoteSecure</title>
-	<link rel="stylesheet" href="common.css">
-	<link rel="stylesheet" href="voter.css">
+    <link rel="stylesheet" href="votesecure.css">
 </head>
 <body class="voter-page">
     <!-- Navigation -->
@@ -21,7 +20,6 @@
                 </a>
             </div>
             <div class="nav-actions">
-				<!-- <a href="viewElectionDetails.html" class="btn btn-sm btn-secondary">View Election Details</a> -->
                 <div id="walletInfo"></div>
                 <button id="connectWalletBtn" class="btn btn-sm btn-primary">
                     <span class="service-status loading"></span>
@@ -171,29 +169,22 @@
                             <p class="receipt-subtitle">Save this information to verify your vote was included in the final tally.</p>
                             
                             <div class="receipt-field">
-                                <label>Event ID:</label>
-                                <div id="receiptEventId">--</div>
-                                <button type="button" onclick="copyToClipboard('receiptEventId')" class="btn-copy">Copy</button>
-                            </div>
-
-                            <div class="receipt-field">
                                 <label>Commitment Hash:</label>
                                 <div class="hash-display" id="receiptCommitment" title="Use this to verify your ballot later">--</div>
                                 <button type="button" onclick="copyToClipboard('receiptCommitment')" class="btn-copy">Copy</button>
                             </div>
-
+                            
                             <div class="receipt-field">
                                 <label>Transaction Hash:</label>
                                 <div class="hash-display" id="receiptTxHash">--</div>
                                 <button type="button" onclick="copyToClipboard('receiptTxHash')" class="btn-copy">Copy</button>
-                                <a id="receiptExplorerLink" href="#" target="_blank" style="display: none; margin-left: 10px; font-size: 12px;">View on Explorer</a>
                             </div>
-
+                            
                             <div class="receipt-field">
                                 <label>Timestamp:</label>
                                 <div id="receiptTimestamp">--</div>
                             </div>
-
+                            
                             <div class="receipt-field">
                                 <label>Update Sequence:</label>
                                 <div id="receiptSequence">--</div>
@@ -257,28 +248,25 @@
     </footer>
 
     <!-- Scripts: Load in correct order -->
-    <!-- 1. Buffer Polyfill (for Node.js Buffer compatibility in browser) -->
-    <script type="module">
-        import { Buffer } from 'https://cdn.jsdelivr.net/npm/buffer@6.0.3/+esm';
-        window.Buffer = Buffer;
-    </script>
-
-    <!-- 2. ES Module Shims (for import maps support) -->
+    <!-- 1. ES Module Shims (for import maps support) -->
     <script async src="https://ga.jspm.io/npm:es-module-shims@2/dist/es-module-shims.js"></script>
-
-    <!-- 3. Import Map (defines module locations) -->
+    
+    <!-- 2. Import Map (defines module locations) -->
     <script type="importmap">
     {
       "imports": {
-        "@ckb-ccc/core": "https://cdn.jsdelivr.net/npm/@ckb-ccc/core/dist/index.mjs",
-        "@ckb-ccc/connector-react": "https://cdn.jsdelivr.net/npm/@ckb-ccc/connector-react/dist/index.mjs"
+        "@joyid/ckb": "https://esm.sh/@joyid/ckb@1.1.2?bundle&target=es2022&polyfill-node",
+        "@ckb-lumos/lumos": "https://esm.sh/@ckb-lumos/lumos@0.23.0?bundle&target=es2022&polyfill-node"
       }
     }
     </script>
 
-    <!-- 4. CKB Service with CCC (ES Module) - Uses JoyID with CCC library -->
-    <script type="module" src="../src/ckbService_ccc.js"></script>
-
+    <!-- 3. CKB Service Bridge (ES Module) - Must load first -->
+    <script type="module" src="../src/ckbServiceBridge.js"></script>
+    
+    <!-- 4. Blockchain Module (Regular script, wraps in IIFE) -->
+    <script src="../src/blockchain.js"></script>
+    
     <!-- 5. Voter Script (Regular script, uses globals) -->
     <script src="voter.js"></script>
 

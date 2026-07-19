@@ -1,45 +1,42 @@
 {
-  "name": "votesecure",
-  "version": "0.8.7",
-  "description": "Privacy-preserving, auditable voting dApp on CKB",
-  "main": "index.html",
+  "name": "votesecure-ccc-migration",
+  "version": "0.8.6",
+  "description": "VoteSecure blockchain voting system using @ckb-ccc/connector-react",
+  "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview",
-    "lint": "eslint src --ext ts,tsx",
-    "type-check": "tsc --noEmit"
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ckb-ccc/connector-react": "^1.0.29",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "vite": "^5.0.0"
   },
   "keywords": [
     "blockchain",
     "voting",
     "ckb",
     "nervos",
-    "privacy"
+    "ccc",
+    "web3"
   ],
   "author": "VoteSecure Team",
   "license": "MIT",
-  "dependencies": {
-    "@ckb-ccc/connector-react": "^1.0.29",
-    "@ckb-ccc/core": "^0.0.14",
-    "@ckb-ccc/joy-id": "^0.0.14",
-    "@ckb-lumos/common-scripts": "^0.24.0-next.2",
-    "@ckb-lumos/helpers": "^0.24.0-next.2",
-    "@ckb-lumos/lumos": "^0.24.0-next.2",
-    "@joyid/ckb": "^1.1.2",
-    "@nervosnetwork/ckb-sdk-core": "^0.109.0",
-    "@nervosnetwork/ckb-sdk-utils": "^0.109.0",
-    "buffer": "^6.0.3",
-    "crypto-browserify": "^3.12.0"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-react": "^5.1.0",
-    "http-server": "^14.1.1",
-    "typescript": "^5.9.3",
-    "vite": "^7.1.12",
-    "vite-plugin-node-polyfills": "^0.24.0"
-  },
-  "overrides": {
-    "axios": "^1.7.9"
+  "notes": {
+    "migration": "Migrated from @joyid/ckb + @ckb-lumos/lumos to @ckb-ccc/connector-react",
+    "oldDependencies": [
+      "@joyid/ckb (removed)",
+      "@ckb-lumos/lumos (removed)",
+      "@ckb-lumos/config-manager (removed)",
+      "@ckb-lumos/ckb-indexer (removed)",
+      "@ckb-lumos/common-scripts (removed)"
+    ]
   }
 }
