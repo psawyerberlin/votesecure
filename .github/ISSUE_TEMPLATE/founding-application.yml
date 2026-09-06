@@ -1,0 +1,87 @@
+name: Founding cohort application
+description: Apply to join the VoteSecure founding cohort. Your application will be public.
+title: "Founding application: <your name or handle>"
+labels: ["founding-application"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for considering this.
+
+        **Before you start:** read the [Contributor Charter](https://votesecure.net/charter).
+        It defines how the founding cohort is selected and how Merit-Voice works.
+
+        **This application is public.** The Charter requires that every application and the
+        reason for every decision is published. Do not put anything here that you are not
+        willing to have on the public record. You may be pseudonymous in public, but your
+        real name must be known to the other contributors (see question 3).
+
+        There is no entry task and no fixed cohort size. The first Merit Round opens
+        **1 March 2027**; applications before then are considered for the founding cohort,
+        which shares the first 100 MV equally.
+  - type: input
+    id: artifact
+    attributes:
+      label: 1. A link to something you have made
+      description: >
+        A repository, a paper, a portfolio, a campaign, a professional profile — something
+        a stranger can open. Not a CV.
+      placeholder: https://
+    validations:
+      required: true
+  - type: textarea
+    id: statement
+    attributes:
+      label: 2. About 300 words
+      description: >
+        Why fair on-chain voting matters to you, and what you would work on in your first
+        two quarters.
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: 3. Your real name, known to the other contributors
+      description: >
+        Anonymity within the cohort is not acceptable — mutual identification is the
+        project's only defence against one person holding several contributor accounts.
+        You can still be pseudonymous in public. If you need to share your legal name
+        privately rather than in this public issue, write "will share privately" here and
+        say how you would like to be contacted.
+    validations:
+      required: true
+  - type: dropdown
+    id: conflicts
+    attributes:
+      label: Conflicts of interest
+      description: >
+        The Charter excludes applicants with an undisclosed conflict of interest, such as
+        employment by a voting-system vendor or an active political campaign.
+      options:
+        - I have no such conflict of interest
+        - I have a potential conflict and describe it below
+    validations:
+      required: true
+  - type: textarea
+    id: conflict_detail
+    attributes:
+      label: Conflict of interest — details (if any)
+      description: Leave blank if not applicable.
+    validations:
+      required: false
+  - type: checkboxes
+    id: agreement
+    attributes:
+      label: Agreement
+      options:
+        - label: I have read the Contributor Charter and agree to it.
+          required: true
+        - label: I agree that the project's code is under the MIT Licence.
+          required: true
+        - label: >
+            I understand that Merit-Voice can never be bought, sold or transferred, that
+            the project has no funding and cannot pay anyone, and that any future
+            distribution may be nothing, for years or forever.
+          required: true
+        - label: I understand that this application and the decision on it will be published.
+          required: true

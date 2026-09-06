@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contributor Charter
+    url: https://votesecure.net/charter
+    about: The founding-cohort selection criteria and the Merit-Voice rules live here. Read this before applying.
+  - name: Open problems / research agenda
+    url: https://votesecure.net/#unsolved
+    about: The unsolved problems the project is looking for people to work on.
