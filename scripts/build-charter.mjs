@@ -49,11 +49,14 @@ function inline(src) {
   // Literal open-item marker (used outside backticks, if ever).
   s = s.replace(/#TO_BE_IMPROVED#/g, '<span class="tbi">To be improved</span>');
 
-  // Links: [text](url)
+  // Links: [text](url). External links open in a new tab, with a screen-reader hint.
   s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_, text, url) => {
     const safe = url.replace(/"/g, '%22');
-    const external = /^https?:\/\//i.test(url);
-    return `<a href="${safe}"${external ? ' rel="noopener"' : ''}>${text}</a>`;
+    if (/^https?:\/\//i.test(url)) {
+      return `<a href="${safe}" target="_blank" rel="noopener">${text}` +
+             '<span class="visually-hidden"> (opens in a new tab)</span></a>';
+    }
+    return `<a href="${safe}">${text}</a>`;
   });
 
   s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -245,7 +248,7 @@ function buildPage(md) {
   <main id="main" class="doc">
     <div class="wrap">
       <p class="doc-note">This page is generated from
-        <a href="https://github.com/psawyerberlin/votesecure/blob/main/CHARTER.md" rel="noopener">CHARTER.md</a>
+        <a href="https://github.com/psawyerberlin/votesecure/blob/main/CHARTER.md" target="_blank" rel="noopener">CHARTER.md<span class="visually-hidden"> (opens in a new tab)</span></a>
         in the repository, which is the single source of truth. The Charter is a draft and
         is not yet adopted.</p>
 ${body}
@@ -256,10 +259,10 @@ ${body}
     <div class="wrap">
       <ul>
         <li><a href="/">Home</a></li>
-        <li><a href="https://github.com/psawyerberlin/votesecure">Repository</a></li>
+        <li><a href="https://github.com/psawyerberlin/votesecure" target="_blank" rel="noopener">Repository<span class="visually-hidden"> (opens in a new tab)</span></a></li>
         <li><a href="impressum.html">Impressum</a></li>
         <li><a href="datenschutz.html">Datenschutz</a></li>
-        <li><a href="https://github.com/psawyerberlin/votesecure/blob/main/LICENSE">MIT Licence</a></li>
+        <li><a href="https://github.com/psawyerberlin/votesecure/blob/main/LICENSE" target="_blank" rel="noopener">MIT Licence<span class="visually-hidden"> (opens in a new tab)</span></a></li>
       </ul>
       <p class="repeat">No token. No investment round. Ever.</p>
     </div>
