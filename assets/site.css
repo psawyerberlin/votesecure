@@ -373,8 +373,9 @@ body > header.navbar {
 }
 
 /* ===================== Rendered document (/charter) ===================== */
-.doc { padding-block: clamp(2rem, 5vw, 3.5rem); }
+.doc { padding-block: clamp(2rem, 5vw, 3.5rem); overflow-wrap: break-word; }
 .doc .wrap { max-width: calc(72ch + var(--gutter) * 2); }
+.doc a { overflow-wrap: anywhere; }
 .doc h1 { margin-bottom: 0.6rem; }
 .doc h2 {
   margin-top: 2.4rem;
