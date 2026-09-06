@@ -4,6 +4,22 @@
  */
 
 /* ============================================================================
+   PROTOTYPE BANNER — shown on every dApp page (SITE_BRIEF: /demo must carry a
+   visible notice that it is an incomplete prototype and not for real elections)
+   ============================================================================ */
+.prototype-banner {
+    background: #A3261C;
+    color: #fff;
+    font-size: 15px;
+    line-height: 1.5;
+    padding: 12px 20px;
+    text-align: center;
+}
+.prototype-banner p { margin: 0 auto; max-width: 70ch; }
+.prototype-banner strong { font-weight: 700; }
+.prototype-banner a { color: #fff; text-underline-offset: 2px; }
+
+/* ============================================================================
    VARIABLES & RESET
    ============================================================================ */
 

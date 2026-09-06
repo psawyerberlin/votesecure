@@ -89,7 +89,8 @@ a:hover {
    NAVIGATION
    ============================================================================ */
 
-.navbar {
+.navbar,
+.masthead {
     background: var(--white);
     border-bottom: 1px solid var(--border);
     padding: 1rem 0;
@@ -99,7 +100,8 @@ a:hover {
     box-shadow: var(--shadow-sm);
 }
 
-.navbar .container {
+.navbar .container,
+.masthead .container {
     display: flex;
     justify-content: space-between;
     align-items: center;

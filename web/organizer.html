@@ -3,16 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <title>Create Election - VoteSecure</title>
 	<link rel="stylesheet" href="common.css">
 	<link rel="stylesheet" href="organizer.css">
 </head>
 <body class="organizer-page">
+    <div class="prototype-banner" role="alert">
+        <p><strong>Incomplete prototype &mdash; not for real elections or polls.</strong>
+        Runs on the CKB test network; several security problems are unsolved; data may be
+        reset. <a href="../demo.html">About the prototype</a> &middot;
+        <a href="/">votesecure.net</a></p>
+    </div>
+
     <!-- Navigation -->
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <a href="../index.html">
+                <a href="../demo.html">
                     <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path d="M9 11l3 3L22 4"></path>
                         <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
@@ -493,7 +501,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; <a href="../index.html" class="footer-link">VoteSecure</a>. Privacy-preserving voting on Nervos CKB.</p>
+            <p>&copy; <a href="../demo.html" class="footer-link">VoteSecure</a>. Privacy-preserving voting on Nervos CKB.</p>
         </div>
     </footer>
 
