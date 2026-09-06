@@ -42,4 +42,5 @@ coverage/
 
 #Private 
 neuronkey.json
-PS_Local_Notes/
+PS_Local_Notes/*:Zone.Identifier
+node_modules/
