@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Datenschutz — VoteSecure</title>
+  <meta name="description" content="Privacy notice for votesecure.net. No cookies, no analytics, no tracking. Fonts are self-hosted.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/public-sans-400.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/public-sans-700.woff2" crossorigin>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="masthead">
+    <div class="wrap masthead__inner">
+      <a class="nav-brand" href="/">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path d="M9 11l3 3L22 4"></path>
+          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+        </svg>
+        <span class="logo-text">VoteSecure</span>
+      </a>
+      <nav class="jump" aria-label="Site">
+        <a href="/">Home</a>
+        <a href="charter.html">Charter</a>
+        <a href="impressum.html">Impressum</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="doc">
+    <div class="wrap">
+      <h1>Datenschutz / Privacy notice</h1>
+      <p class="doc-note">Bracketed fields are placeholders and must be completed by the
+        operator before the site goes live. This notice is not legal advice; confirm the
+        wording before launch.</p>
+
+      <h2>Controller</h2>
+      <p>The controller under Art. 4 (7) GDPR is the operator named in the
+        <a href="impressum.html">Impressum</a>. For data-protection questions, use the
+        contact address given there.</p>
+
+      <h2>What the main site does and does not do</h2>
+      <p>The pages of votesecure.net (the front page, this notice, the Impressum and the
+        Contributor Charter) are static. They set <strong>no cookies</strong>, use
+        <strong>no analytics</strong>, no tracking pixels, no advertising and no consent
+        banner, because there is nothing to consent to. Fonts are
+        <strong>self-hosted</strong> on votesecure.net; no font, script or style is loaded
+        from a third-party network such as Google Fonts or a CDN.</p>
+      <p>The site contains no contact form and stores no personal data of its own.</p>
+
+      <h2>Server log files</h2>
+      <p>When your browser requests a page, the hosting provider automatically processes
+        the data your browser transmits: IP address, date and time of the request, the
+        page requested, the referrer URL, and the browser and operating system identifier.
+        This is necessary to deliver the site and to keep it secure and stable.</p>
+      <ul>
+        <li><em>Legal basis:</em> Art. 6 (1) (f) GDPR (legitimate interest in operating a
+          secure website).</li>
+        <li><em>Hosting provider:</em> [HOSTING PROVIDER NAME AND ADDRESS].</li>
+        <li><em>Retention:</em> log entries are deleted or anonymised after
+          [RETENTION PERIOD, e.g. 7 days / 14 days] unless they are needed longer to
+          investigate a specific security incident.</li>
+        <li>A data processing agreement under Art. 28 GDPR is in place with the hosting
+          provider. [CONFIRM.]</li>
+      </ul>
+
+      <h2>Applying to contribute</h2>
+      <p>Applications to the founding cohort are made <strong>publicly, as issues on
+        GitHub</strong>. If you open an application you do so on github.com, and GitHub,
+        Inc. processes your data as an independent controller under its own terms. See the
+        <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">GitHub Privacy Statement</a>.
+        The Charter requires that applications and selection decisions are published, so
+        the content of an application is public by design. Do not put personal data you
+        want to keep private into an application.</p>
+      <p>votesecure.net itself receives and stores nothing in this process.</p>
+
+      <h2>The prototype at <code>/demo</code> — third-party services</h2>
+      <p>The prototype voting application (reachable from the front page as
+        &ldquo;the prototype&rdquo;, at <code>/demo</code> and under <code>/web/</code>) is
+        older code that has <strong>not</strong> yet been brought in line with the rest of
+        the site. You should be aware of the following before you open it:</p>
+      <ul>
+        <li><strong>Script CDNs.</strong> The prototype pages load JavaScript libraries at
+          runtime from the public content delivery networks
+          <strong>jsDelivr</strong> (<code>cdn.jsdelivr.net</code>) and
+          <strong>jspm.io</strong> (<code>ga.jspm.io</code>). When your browser loads these
+          files, those providers necessarily receive your <strong>IP address</strong>,
+          the file requested, and standard request metadata (time, referrer, browser
+          identifier). They may be located outside the EU/EEA.</li>
+        <li><strong>Blockchain endpoints.</strong> If you actually use the prototype, it
+          connects to a public Nervos CKB test-network node at
+          <code>testnet.ckb.dev</code> and links to the block explorer at
+          <code>pudge.explorer.nervos.org</code>. These operators likewise receive your IP
+          address and request data.</li>
+        <li><strong>Wallet.</strong> Connecting a JoyID wallet involves the wallet
+          provider under its own privacy policy.</li>
+      </ul>
+      <ul>
+        <li><em>Legal basis:</em> Art. 6 (1) (f) GDPR (legitimate interest in offering a
+          working demonstration without operating our own library and node
+          infrastructure).</li>
+        <li><em>How to avoid it:</em> do not open <code>/demo</code> or the
+          <code>/web/</code> pages. The rest of votesecure.net does not contact any of
+          these services.</li>
+      </ul>
+      <p>Self-hosting these libraries and removing the runtime CDN dependency is a known
+        task for the prototype; it is recorded in the repository at
+        <a href="https://github.com/psawyerberlin/votesecure/blob/main/docs/prototype-third-party-deps.md" rel="noopener">docs/prototype-third-party-deps.md</a>.</p>
+
+      <h2>On-chain data</h2>
+      <p>If you cast a ballot with the prototype, election parameters and your encrypted
+        ballot are written to the public CKB test network and are, by the nature of a
+        blockchain, permanent and world-readable. They are linked to a wallet address, not
+        to your name. Because the ledger is immutable, this data cannot be deleted or
+        corrected after it is published. Do not put personal data into election text.</p>
+
+      <h2>Your rights</h2>
+      <p>You have the rights of access (Art. 15), rectification (Art. 16), erasure
+        (Art. 17), restriction (Art. 18), data portability (Art. 20) and objection
+        (Art. 21) under the GDPR, subject to the technical limits of a public blockchain.
+        You may lodge a complaint with a supervisory authority, in particular in the
+        Member State of your residence, place of work or the place of the alleged
+        infringement (Art. 77). The competent authority for the operator is
+        [SUPERVISORY AUTHORITY FOR THE OPERATOR'S FEDERAL STATE].</p>
+
+      <h2>Changes</h2>
+      <p>This notice will be updated if the site changes. The current version is the one
+        published here.</p>
+      <p class="doc-note">Last updated: [DATE]. This notice must be reviewed whenever the
+        site's third-party dependencies change — in particular when the prototype is
+        migrated off the script CDNs.</p>
+    </div>
+  </main>
+
+  <footer class="colophon">
+    <div class="wrap">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="https://github.com/psawyerberlin/votesecure">Repository</a></li>
+        <li><a href="charter.html">Charter</a></li>
+        <li><a href="impressum.html">Impressum</a></li>
+        <li><a href="https://github.com/psawyerberlin/votesecure/blob/main/LICENSE">MIT Licence</a></li>
+      </ul>
+      <p class="repeat">No token. No investment round. Ever.</p>
+    </div>
+  </footer>
+</body>
+</html>
