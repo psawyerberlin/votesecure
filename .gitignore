@@ -44,3 +44,6 @@ coverage/
 neuronkey.json
 PS_Local_Notes/*:Zone.Identifier
 node_modules/
+
+# Windows "mark of the web" metadata
+*:Zone.Identifier
