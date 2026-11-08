@@ -1,21 +1,45 @@
 **Executive Summary**
 
-VoteSecure is a decentralized application (dApp) for running transparent, tamper evident, and privacy preserving elections and polls. It leverages the Nervos CKB (Common Knowledge Base) blockchain for public verifiability while keeping voter choices confidential. The application is open source and designed so results can be independently audited without trusting a central authority.
- 
-📦 Version: Draft v0.9
+VoteSecure is an open research and engineering project building
+transparent, tamper-evident, privacy-preserving elections on the Nervos
+CKB blockchain. The goal is an election anyone can verify and nobody can
+link back to a voter.
 
-📅 Date: 19 October 2025
+It is not finished. A working prototype runs on a local devnet — ballot
+encryption, on-chain submission, deterministic public tallying — but
+several problems at the centre of the design are unsolved, and the
+current build is not safe for a real election. The open problems are
+documented rather than hidden, because they are what we are recruiting
+for.
 
-👤 Author: Patrick Sawyer (psawyer@gmx.net)
+**What is unsolved**
+- Proving eligibility without ever putting a voter's identity or wallet on chain
+- Defending anonymity against a ledger that timestamps everything
+- Removing the remaining trusted parts: a relay trusted for liveness, and drand for tally-key release
+- Cost, wallet-free voting, and anchoring results to Bitcoin via RGB++
 
-🤖 AI assistance: Drafting/editing support with GPT-5 (ChatGPT), Claude and Grok
+**How the project works**
 
-📄 License: MIT
+No funding, no deadline, no token, and no owner. Contribution is the
+only currency: contributors award each other Merit-Voice (MV) each
+quarter, a non-transferable unit that can never be bought. MV decides
+voting power, capped at 15%, and how any future donations are split.
+Every award, vote and application is public. The first Merit Round opens
+1 March 2027.
 
+**Contributors wanted:** cryptographers, CKB engineers, frontend and
+security engineers, election lawyers and administrators, and people who
+can write clearly in a language other than English. See CONTRIBUTING.md.
+
+---
+📦 Version: Draft v0.95
+📅 Date: <update on commit>
+👤 Steward: Patrick Sawyer (psawyer@gmx.net)
+🤖 AI assistance: drafting and code support from Claude, GPT-5 and Grok
+📄 Licence: MIT
 🔗 Repository: github.com/psawyerberlin/votesecure
-
-🌐 Live Site: https://votesecure.net
-
-🎯 Intended Audience: Anyone running, auditing, or participating in secure and verifiable elections or polls.
-
-(See documentation/Votesecure_White_Paper.pdf for details)
+🌐 Site: https://votesecure.net · prototype at /demo
+📋 Governance: CHARTER.md
+📄 Design: documentation/Votesecure_White_Paper.pdf
+🎯 Audience: people who want to help build verifiable elections, and
+   anyone auditing the design
