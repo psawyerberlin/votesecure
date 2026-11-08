@@ -2022,10 +2022,9 @@ async function withdrawEventFunds(eventId, organizerAddress) {
     const confirmed = confirm(
       `Withdraw Event Funds\n\n` +
       `This will:\n` +
-      `• Withdraw ${remainingCKB.toFixed(2)} CKB from EventFund\n` +
-      `• Clean up Metadata cell\n` +
-      `• Clean up Result cell\n` +
-      `• Return all capacity to your wallet\n\n` +
+      `• Return the EventFund (${remainingCKB.toFixed(2)} CKB), Metadata and Result cells to your wallet\n` +
+      `• Return each ballot cell's CKB to the voter who paid for it\n` +
+      `• You pay the small transaction fee\n\n` +
       `The event will be permanently closed.\n\n` +
       `Continue?`
     );
@@ -2659,29 +2658,6 @@ function generateMockAnswers(questions) {
       return answers;
     }
   });
-}
-
-/**
- * Withdraw unused event funds
- */
-async function withdrawEventFunds(organizerAddress, eventId) {
-  if (!currentOrganizer || currentOrganizer.address !== organizerAddress) {
-    throw new Error('Only organizer can withdraw funds');
-  }
-  
-  const event = getEvent(eventId);
-  if (!event) throw new Error('Event not found');
-  
-  const now = Math.floor(Date.now() / 1000);
-  if (now < event.metadata.schedule.endTime) {
-    throw new Error('Cannot withdraw funds before event ends');
-  }
-  
-  const remainingFunds = event.eventFund.remainingFunds;
-  
-  showNotification(`Withdrawal of ${remainingFunds / 100000000} CKB initiated`, 'info');
-  
-  return { success: true, amount: remainingFunds };
 }
 
 /**

@@ -1138,7 +1138,15 @@ async function getEvent(eventId) {
     
     const metadata = metadataCell ? parseJsonData(metadataCell.outputData) : null;
     const result = resultCell ? parseJsonData(resultCell.outputData) : null;
-    const eventFund = eventFundCell ? parseJsonData(eventFundCell.outputData) : null;
+    const eventFundData = eventFundCell ? parseJsonData(eventFundCell.outputData) : null;
+    // remainingFunds = the fund cell's actual capacity (the data field is not maintained)
+    const eventFund = eventFundCell ? {
+      ...(eventFundData || {}),
+      remainingFunds: Number(eventFundCell.cellOutput.capacity)
+    } : eventFundData;
+    const lockedCapacity = [metadataCell, resultCell, eventFundCell]
+      .filter(Boolean)
+      .reduce((sum, c) => sum + Number(c.cellOutput.capacity), 0);
     
     // Determine event status
     let status = 'active';
@@ -1164,6 +1172,7 @@ async function getEvent(eventId) {
       status: status,
       result: result,
       eventFund: eventFund,
+      lockedCapacity: lockedCapacity,
       metadata: metadata,
       cells: {
         metadata: metadataCell,
@@ -1393,6 +1402,146 @@ async function submitBallot(ballot, voterAddress) {
 // EXPORT TO WINDOW
 // ============================================================================
 
+
+// ============================================================================
+// WITHDRAWAL (RECLAIM AFTER AUDIT END)
+// ============================================================================
+
+/**
+ * Lock script of the wallet that paid for a cell: the lock of the first input
+ * of the transaction that created it.
+ */
+async function getCellFunderLock(outPoint) {
+  const client = initCCC();
+  const created = await client.getTransaction(outPoint.txHash);
+  if (!created?.transaction?.inputs?.length) return null;
+  const firstInput = created.transaction.inputs[0].previousOutput;
+  const prev = await client.getTransaction(firstInput.txHash);
+  const out = prev?.transaction?.outputs?.[Number(firstInput.index)];
+  return out ? ccc.Script.from(out.lock) : null;
+}
+
+/**
+ * All live cells of an event under the VoteSecure lock
+ * (0x01 metadata, 0x02 ballots, 0x03 result, 0x04 fund).
+ */
+async function findEventCells(eventId) {
+  const eventIdHex = stringToHex(eventId).padStart(64, '0');
+  const kinds = { '01': 'metadata', '02': 'ballot', '03': 'result', '04': 'fund' };
+  const cells = [];
+  for (const [prefix, kind] of Object.entries(kinds)) {
+    const found = await searchCellsByLockArgs('0x' + prefix + eventIdHex);
+    for (const cell of found) cells.push({ kind, cell });
+  }
+  return cells;
+}
+
+/**
+ * Close an event after its audit end time and return all locked CKB.
+ *
+ * Every event cell goes back to the wallet that paid for it: the organiser gets
+ * metadata, result and fund cells; each ballot cell goes back to the voter who
+ * paid for it (in this prototype voters fund their own ballot cells). Only the
+ * wallet that created the event may do this, and only after auditEndTime.
+ *
+ * Prototype note: the on-chain lock is a stub that accepts every transaction,
+ * so these checks are enforced here in the client, not on chain (the v2.3
+ * script enforces them as the RECLAIM transition).
+ *
+ * @returns {Promise<{success:boolean, txHash?:string, amount?:number, refunds?:Array, error?:string}>}
+ */
+async function withdrawEventFunds(eventId, organizerAddress, event = null) {
+  try {
+    const client = initCCC();
+    const signer = initJoyIDSigner();
+    event = event || await getEvent(eventId);
+    if (!event) return { success: false, error: 'Event not found' };
+
+    // 1. Timing: only after the audit period
+    const auditEndTime = event.schedule?.auditEndTime || event.metadata?.schedule?.auditEndTime;
+    const now = Math.floor(Date.now() / 1000);
+    if (!auditEndTime) return { success: false, error: 'Audit end time not found in event data' };
+    if (now < auditEndTime) {
+      return { success: false, error: `Audit period ends ${new Date(auditEndTime * 1000).toLocaleString()}` };
+    }
+
+    // 2. Collect the event's cells
+    const cells = await findEventCells(eventId);
+    if (cells.length === 0) return { success: false, error: 'No cells left for this event (already withdrawn?)' };
+    const metadataEntry = cells.find(c => c.kind === 'metadata');
+    if (!metadataEntry) return { success: false, error: 'Metadata cell not found' };
+
+    // 3. Authorisation: the connected wallet must be the one that created the event
+    const signerLock = (await signer.getRecommendedAddressObj()).script;
+    const creatorLock = await getCellFunderLock(metadataEntry.cell.outPoint);
+    if (!creatorLock || !creatorLock.eq(signerLock)) {
+      return { success: false, error: 'Only the wallet that created this election can withdraw its funds' };
+    }
+
+    // 4. Group capacities by funder
+    const payouts = new Map(); // lock hash -> { lock, capacity, kinds }
+    const addPayout = (lock, capacity, kind) => {
+      const key = lock.hash();
+      const entry = payouts.get(key) || { lock, capacity: 0n, kinds: [] };
+      entry.capacity += capacity;
+      entry.kinds.push(kind);
+      payouts.set(key, entry);
+    };
+    for (const { kind, cell } of cells) {
+      const capacity = BigInt(cell.cellOutput.capacity);
+      const funder = kind === 'ballot' ? await getCellFunderLock(cell.outPoint) : signerLock;
+      addPayout(funder || signerLock, capacity, kind);
+    }
+
+    // A refund too small to form its own cell is added to the organiser's output
+    for (const [key, entry] of payouts) {
+      if (entry.lock.eq(signerLock)) continue;
+      const occupied = BigInt(ccc.CellOutput.from({ capacity: 0n, lock: entry.lock }).occupiedSize) * CKB_DECIMAL;
+      if (entry.capacity < occupied) {
+        addPayout(signerLock, entry.capacity, 'dust');
+        payouts.delete(key);
+      }
+    }
+
+    // 5. Build the transaction: inputs = event cells, outputs = one per funder
+    const outputs = [...payouts.values()].map(p => ({ capacity: p.capacity, lock: p.lock }));
+    const tx = ccc.Transaction.from({
+      inputs: cells.map(({ cell }) => ({ previousOutput: cell.outPoint })),
+      outputs,
+      outputsData: outputs.map(() => '0x'),
+      cellDeps: [{
+        outPoint: {
+          txHash: VOTESECURE_CONFIG.lockscript.outPoint.txHash,
+          index: VOTESECURE_CONFIG.lockscript.outPoint.index
+        },
+        depType: 'code'
+      }]
+    });
+
+    // Fee paid by the organiser (adds one organiser input plus change)
+    await tx.completeFeeBy(signer, 1000);
+
+    if (DEBUG_LOG) {
+      console.log('=== WITHDRAWAL TX ===');
+      console.log('Event cells:', cells.map(c => `${c.kind} ${shannons2CKB(BigInt(c.cell.cellOutput.capacity))} CKB`));
+      console.log('Payouts:', [...payouts.values()].map(p => `${p.kinds.join('+')} -> ${shannons2CKB(p.capacity)} CKB`));
+    }
+
+    const txHash = await signer.sendTransaction(tx);
+    const organiser = [...payouts.values()].find(p => p.lock.eq(signerLock));
+    const refunds = [...payouts.values()]
+      .filter(p => !p.lock.eq(signerLock))
+      .map(p => ({ lockHash: p.lock.hash(), amount: Number(p.capacity) }));
+
+    if (DEBUG_LOG) console.log('Withdrawal sent:', txHash, `https://pudge.explorer.nervos.org/transaction/${txHash}`);
+    return { success: true, txHash, amount: Number(organiser?.capacity || 0n), refunds };
+
+  } catch (error) {
+    console.error('Withdrawal failed:', error);
+    return { success: false, error: error.message || String(error) };
+  }
+}
+
 window.CKBService = {
   // Connection
   connectJoyID,
@@ -1432,6 +1581,9 @@ window.CKBService = {
   getParticipationStats,
   submitBallot,
   searchCellsByLockArgs,
+  withdrawEventFunds,
+  findEventCells,
+  getCellFunderLock,
   
   // Blockchain Info
   getBlockNumber,
@@ -1498,6 +1650,9 @@ export {
   getParticipationStats,
   submitBallot,
   searchCellsByLockArgs,
+  withdrawEventFunds,
+  findEventCells,
+  getCellFunderLock,
   // ADD THESE NEW EXPORTS:
   //queryAllMetadataCells,
   extractEventIdFromArgs,
