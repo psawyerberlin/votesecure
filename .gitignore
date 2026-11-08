@@ -55,6 +55,9 @@ target/
 PS_Local_Notes/
 .claude/settings.local.json
 
+# Incoming draft docs, staged locally before being merged into docs/
+_incoming/
+
 # Site package for manual upload (scripts/package-site.sh)
 site-dist/
 site-dist.zip
