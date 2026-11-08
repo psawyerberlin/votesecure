@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VoteSecure — fair and verifiable voting on a public blockchain</title>
+  <meta name="description" content="A volunteer project building fair, verifiable, decentralised voting on the Nervos CKB blockchain. No funding, no deadline, several unsolved problems. We are looking for contributors.">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/public-sans-400.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/public-sans-700.woff2" crossorigin>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="masthead">
+    <div class="wrap masthead__inner">
+      <a class="wordmark" href="about.html">
+        <svg class="wordmark__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 11l3 3L22 4"></path>
+          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+        </svg>
+        <span class="logo-text">VoteSecure</span>
+      </a>
+      <nav class="jump" aria-label="Page sections">
+        <a href="#unsolved">Open problems</a>
+        <a href="#governance">Governance</a>
+        <a href="#apply">Apply</a>
+        <a href="#prototype">Prototype</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <section class="hero">
+      <div class="wrap">
+        <h1>Fair and verifiable voting on a public blockchain.</h1>
+        <p class="lede">No funding. No deadline. Several unsolved problems. We think it
+          takes ten years, and we are looking for the people who want to spend them on
+          this.</p>
+
+        <p class="actions">
+          <a class="btn" href="#apply">Apply to contribute</a>
+          <a class="plain" href="#unsolved">Read the open problems</a>
+        </p>
+
+        <div class="unsolved-preview" aria-labelledby="unsolved-preview-h">
+          <p id="unsolved-preview-h" class="unsolved-preview__h">Not yet solved</p>
+          <ul>
+            <li>Eligibility without identity</li>
+            <li>Anonymity against a timestamped ledger</li>
+            <li>Removing the trusted parts</li>
+            <li>Cost, wallets and anchoring</li>
+          </ul>
+        </div>
+
+        <p class="stamp-strip">No token. No investment. No pre-sale. Contribution is the
+          only way in.</p>
+      </div>
+    </section>
+
+    <section class="thesis">
+      <div class="wrap">
+        <p>Within ten years, public blockchains will be the most trusted settlement layer
+          in finance. People will then ask why their elections are less verifiable than
+          their money. Building that takes a decade, so it has to start now, in the open,
+          with no owner.</p>
+      </div>
+    </section>
+
+    <section class="prose">
+      <div class="wrap">
+        <h2>Why this matters</h2>
+        <p>Money on a public chain can be verified by anyone, at any time, without trusting
+          the institution that holds it. Elections cannot. Voters are asked to trust a
+          supplier, an administrator and a machine they will never inspect.</p>
+        <p>Verifiable voting is a harder problem than verifiable money, because a ballot
+          has to be provably counted and permanently unlinkable from the person who cast
+          it. Those two requirements pull against each other. That is why this is not
+          already solved, and why it is worth a decade.</p>
+
+        <h2>Why Nervos CKB</h2>
+        <p>CKB's cell model lets us put arbitrary verification logic on chain instead of
+          fitting voting into a token standard. Lock scripts are programmable, state is
+          explicit, and the chain is proof-of-work anchored. Fiber can cut the per-ballot
+          cost. RGB++ can anchor results to Bitcoin, the chain with the widest trust.</p>
+        <p>We are not tied to CKB by ideology. It is currently the best fit for what an
+          election needs.</p>
+      </div>
+    </section>
+
+    <section id="unsolved" class="unsolved">
+      <div class="wrap wrap--wide">
+        <h2>What we have not solved</h2>
+        <p class="intro">This is the honest state of the project. If one of these is your
+          field, we would like to hear from you.</p>
+
+        <div class="count-sheet">
+          <article class="problem">
+            <p class="stamp">Open</p>
+            <h3>Eligibility without identity</h3>
+            <p>Only eligible people may vote, exactly once. No voter's identity or wallet
+              may ever appear on chain. Nobody, including the organiser and including us,
+              may be able to link a ballot to a person. The current design checks
+              eligibility on chain and never decrypts a single ballot, but whoever issues
+              the voter keys can still tell who voted. Anonymous credentials, blind
+              signatures and nullifiers are the obvious directions. None of them is chosen
+              yet.</p>
+          </article>
+
+          <article class="problem">
+            <p class="stamp">Open</p>
+            <h3>Anonymity against a timestamped ledger</h3>
+            <p>A blockchain records when everything happened. Submission timing,
+              transaction graphs and fee sources all leak. Batching and shuffling help.
+              They are not a proof. We need an anonymity model we can state precisely and
+              defend. And a chain cannot tell that a deadline has passed, so even closing
+              the vote is a design problem.</p>
+          </article>
+
+          <article class="problem">
+            <p class="stamp">Open</p>
+            <h3>Removing the trusted parts</h3>
+            <p>Ballots are counted while still encrypted, and only the totals are ever
+              decrypted. That decryption needs several trustees together, each holding one
+              share of the key. But trustees who collude could read ballots, and trustees
+              who disappear leave an election without a result. A single relay can still
+              delay ballots. Who the trustees are, how we show they are independent, and
+              whether the proof checks fit on chain at all: open.</p>
+          </article>
+
+          <article class="problem">
+            <p class="stamp">Open</p>
+            <h3>Cost, wallets and anchoring</h3>
+            <p>A voter should not need a wallet, a token balance, or any prior blockchain
+              knowledge, and should never pay a fee. Passkey-derived keys with
+              organiser-paid fees are the current direction. Fiber for cost. RGB++ for a
+              Bitcoin anchor. All unproven at election scale.</p>
+          </article>
+        </div>
+
+        <p class="after"><a href="https://github.com/psawyerberlin/votesecure/blob/main/docs/architecture.md" target="_blank" rel="noopener">Full technical detail lives in the repository <span aria-hidden="true">&rarr;</span><span class="visually-hidden"> (opens in a new tab)</span></a></p>
+      </div>
+    </section>
+
+    <section id="governance" class="prose">
+      <div class="wrap">
+        <h2>Nobody owns this</h2>
+        <p>Contribution is the only currency. Every quarter, contributors award each other
+          <strong>Merit-Voice (MV)</strong> &mdash; a non-transferable unit that can never
+          be bought, at any price. MV decides voting power, capped at
+          <span class="num">15%</span> for any one person once there are seven or more
+          contributors, and decides how any donations
+          the project ever receives are split.</p>
+        <p>The Steward runs the first rounds and says so publicly. Every round result and
+          every decision is put to a public poll before it is carried out. The intention is to hand governance to
+          VoteSecure itself once it can run its own elections.</p>
+        <p class="fineprint">Everything is public: the code (MIT), the ledger, every
+          award, every vote, and every application to join.</p>
+        <p><a href="charter.html">Read the Contributor Charter <span aria-hidden="true">&rarr;</span></a></p>
+      </div>
+    </section>
+
+    <section id="apply" class="apply band">
+      <div class="wrap">
+        <h2>Apply to the founding cohort</h2>
+        <p>The first Merit Round opens <strong>1 March 2027</strong>. Applications before
+          then are considered for the founding cohort, which shares the first
+          <span class="num">100&nbsp;MV</span> equally.</p>
+
+        <ol class="ask">
+          <li>A link to something you have made. A repository, a paper, a portfolio, a
+            campaign, a professional profile. Not a CV.</li>
+          <li>About 300 words: why fair on-chain voting matters to you, and what you would
+            work on in your first two quarters.</li>
+          <li>Your real name, known to the other contributors. You can stay pseudonymous
+            in public.</li>
+        </ol>
+
+        <p>Applications are public. The Steward selects the founding cohort against the
+          criteria in the Charter, and publishes every application and the reason for
+          every decision. AI may be used to summarise and shortlist applications. The
+          Steward makes every decision.</p>
+        <p>If fewer than five people qualify by 1 March 2027, the first round moves one
+          quarter and we say so.</p>
+
+        <p class="actions">
+          <a class="btn" href="https://github.com/psawyerberlin/votesecure/issues/new?template=founding-application.yml" target="_blank" rel="noopener">Apply on GitHub<span class="visually-hidden"> (opens in a new tab)</span></a>
+        </p>
+
+        <!-- TODO(patrick): non-GitHub application route (SITE_BRIEF section 4.6 / 5).
+             Add a real contact address here for applicants who will not use GitHub, with
+             the three points above repeated so they can be copied. Do NOT publish a
+             placeholder address: a dead inbox in front of an applicant is worse than
+             none. When the address exists, replace the paragraph below with:
+             <p class="alt">Prefer not to use GitHub? Email
+             <a href="mailto:ADDRESS">ADDRESS</a> with the three points above.</p> -->
+        <p class="alt">A contact route for applicants who do not use GitHub will be
+          published here shortly.</p>
+
+        <p class="fineprint">We cannot pay anyone. If the project ever receives donations,
+          they are split by MV. That may be nothing, for years, or forever.</p>
+      </div>
+    </section>
+
+    <section id="prototype" class="prototype">
+      <div class="wrap">
+        <h2>There is already code</h2>
+        <p>A prototype dApp runs on the CKB test network:</p>
+        <ul class="runs">
+          <li>ballot encryption in the browser</li>
+          <li>on-chain event publishing and ballot submission</li>
+          <li>results the organiser decrypts</li>
+        </ul>
+        <p>It follows the earlier v1 design, not the current architecture, and its
+          on-chain script does not yet check anything. It is not secure enough for a real
+          election. It exists so you can see that this is engineering, not a
+          whitepaper.</p>
+        <p class="actions">
+          <a class="plain" href="index.html">Open the prototype <span aria-hidden="true">&rarr;</span></a>
+          <a class="plain" href="https://github.com/psawyerberlin/votesecure" target="_blank" rel="noopener">Read the code <span aria-hidden="true">&rarr;</span><span class="visually-hidden"> (opens in a new tab)</span></a>
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="colophon">
+    <div class="wrap">
+      <ul>
+        <li><a href="https://github.com/psawyerberlin/votesecure" target="_blank" rel="noopener">Repository<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+        <li><a href="charter.html">Charter</a></li>
+        <li><a href="impressum.html">Impressum</a></li>
+        <li><a href="datenschutz.html">Datenschutz</a></li>
+        <li><a href="https://github.com/psawyerberlin/votesecure/blob/main/LICENSE" target="_blank" rel="noopener">MIT Licence<span class="visually-hidden"> (opens in a new tab)</span></a></li>
+        <!-- TODO(patrick): add Telegram group link here (SITE_BRIEF section 4.8).
+             Not rendered while the URL is a placeholder — an unresolvable link in the
+             footer is worse than a missing one. -->
+      </ul>
+      <p class="repeat">No token. No investment round. Ever.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -3,24 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoteSecure - Privacy-Preserving Blockchain Voting</title>
+    <title>VoteSecure — verifiable, private voting on Nervos CKB (testnet prototype)</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="web/votesecure.css">
+    <style>
+        .prototype-banner {
+            background: #A3261C;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 15px;
+            line-height: 1.5;
+            padding: 12px 20px;
+            text-align: center;
+        }
+        .prototype-banner strong { font-weight: 700; }
+        .prototype-banner a { color: #fff; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+        .prototype-banner p { margin: 0 auto; max-width: 70ch; }
+        .status-table-wrap { overflow-x: auto; margin: 0 auto; max-width: 960px; }
+        .status-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; font-size: 15px; line-height: 1.45; }
+        .status-table th, .status-table td { padding: 12px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid #e5e7eb; color: #16202A; }
+        .status-table thead th { background: #16202A; color: #fff; font-weight: 600; }
+        .status-table tbody th { font-weight: 600; white-space: nowrap; }
+        .status-table td.gap { color: #A3261C; }
+        .status-table td.ok { color: #2C7A5A; font-weight: 600; }
+        .status-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+        .status-links a { font-weight: 600; }
+        .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    </style>
 </head>
 <body>
+    <div class="prototype-banner" role="alert">
+        <p><strong>Prototype on the CKB testnet &mdash; not for real elections.</strong>
+        It shows the user flow; the security design is not implemented yet.
+        <a href="about.html" target="_blank" rel="noopener">About the project: fair and verifiable voting on a public blockchain<span class="visually-hidden"> (opens in a new tab)</span></a></p>
+    </div>
+
     <!-- Navigation Header -->
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M9 11l3 3L22 4"></path>
-                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
-                </svg>
-                <span class="logo-text">VoteSecure</span>
+                <a href="/">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                    </svg>
+                    <span class="logo-text">VoteSecure</span>
+                </a>
             </div>
             <div class="nav-links">
-                <a href="#features">Features</a>
-                <a href="#how-it-works">How It Works</a>
-                <a href="#security">Security</a>
+                <a href="#features">The idea</a>
+                <a href="#how-it-works">How it works</a>
+                <a href="#status">Status</a>
+                <a href="about.html" target="_blank" rel="noopener">About<span class="visually-hidden"> (opens in a new tab)</span></a>
             </div>
         </div>
     </nav>
@@ -35,39 +69,39 @@
                     <span class="gradient-text">Private Choices.</span>
                 </h1>
                 <p class="hero-subtitle">
-                    Decentralized voting on Nervos CKB blockchain. End-to-end verifiable, 
-                    tamper-evident, and privacy-preserving elections for everyone.
+                    Elections on Nervos CKB that anyone can verify and nobody can link back to a voter.
+                    Ballots are counted while still encrypted: no individual ballot is ever decrypted.
                 </p>
                 <div class="hero-actions">
                     <a href="web/organizer.html" class="btn btn-primary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="12" y1="8" x2="12" y2="16"></line>
                             <line x1="8" y1="12" x2="16" y2="12"></line>
                         </svg>
-                        Create Election
+                        Create a test election
                     </a>
                     <a href="web/voter.html" class="btn btn-secondary">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
                             <path d="M9 11l3 3L22 4"></path>
                             <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
                         </svg>
-                        Vote Now
+                        Vote in a test election
                     </a>
                 </div>
             </div>
-            <div class="hero-visual">
+            <div class="hero-visual" aria-hidden="true">
                 <div class="floating-card card-1">
                     <div class="card-icon">🔒</div>
-                    <div class="card-text">End-to-End Encrypted</div>
+                    <div class="card-text">Counted while encrypted</div>
                 </div>
                 <div class="floating-card card-2">
                     <div class="card-icon">✓</div>
-                    <div class="card-text">Verifiable Results</div>
+                    <div class="card-text">Script-verified tally</div>
                 </div>
                 <div class="floating-card card-3">
                     <div class="card-icon">👥</div>
-                    <div class="card-text">Anonymous Voting</div>
+                    <div class="card-text">Wallet never on chain</div>
                 </div>
             </div>
         </div>
@@ -76,44 +110,39 @@
     <!-- Features Section -->
     <section id="features" class="section features-section">
         <div class="container">
-            <h2 class="section-title">Why VoteSecure?</h2>
-            <p class="section-subtitle">Built on blockchain. Designed for privacy. Made for everyone.</p>
-            
+            <h2 class="section-title">The idea</h2>
+            <p class="section-subtitle">What VoteSecure is designed to guarantee (Architecture v2.3)</p>
+
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">🛡️</div>
-                    <h3>Tamper-Evident</h3>
-                    <p>Every ballot recorded on-chain with cryptographic proof. Results cannot be altered after submission.</p>
-                </div>
-                
-                <div class="feature-card">
                     <div class="feature-icon">🔐</div>
-                    <h3>Privacy First</h3>
-                    <p>Ballots encrypted client-side. Individual votes never exposed. Only aggregate results revealed.</p>
+                    <h3>No ballot is ever opened</h3>
+                    <p>Each ballot encrypts a 0 or 1 per answer option. Encrypted ballots are added up without being decrypted. Only the sums are decrypted, never a single vote.</p>
                 </div>
-                
                 <div class="feature-card">
-                    <div class="feature-icon">✅</div>
-                    <h3>Independently Auditable</h3>
-                    <p>Verify your ballot's inclusion and recompute tallies yourself. No need to trust anyone.</p>
+                    <div class="feature-icon">🗝️</div>
+                    <h3>Nobody holds the key</h3>
+                    <p>The election key is created jointly by several trustees. Any <em>t</em> of <em>n</em> of them can decrypt a sum. No organiser, relay or developer can read results alone.</p>
                 </div>
-                
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>The chain checks the count</h3>
+                    <p>A frozen on-chain script checks a validity proof on every ballot, adds the encrypted ballots itself, and accepts only the tally the trustees' proofs allow.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👤</div>
+                    <h3>Your wallet stays off chain</h3>
+                    <p>JoyID only derives a per-election pseudonym on your device. Your wallet signs no transaction and never appears next to your ballot.</p>
+                </div>
                 <div class="feature-card">
                     <div class="feature-icon">⚡</div>
-                    <h3>Gas-Free Voting</h3>
-                    <p>Organizers sponsor all transaction fees. Voters cast ballots without crypto or wallet funds.</p>
+                    <h3>Free for voters</h3>
+                    <p>The organiser funds storage and fees. A Ballot Relay posts ballots in shuffled batches, so even the timing of your vote is hidden.</p>
                 </div>
-                
                 <div class="feature-card">
                     <div class="feature-icon">🔄</div>
-                    <h3>Revoting Allowed</h3>
-                    <p>Change your mind before deadline. Only your final ballot counts, with configurable update limits.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>Flexible Configuration</h3>
-                    <p>Public polls or private elections. Real-time or delayed results. Group-level or total reporting.</p>
+                    <h3>Revote, results at release</h3>
+                    <p>Change your vote before the deadline; only the last one counts. During voting only participation is shown. Option totals appear after release, with small groups merged.</p>
                 </div>
             </div>
         </div>
@@ -122,74 +151,74 @@
     <!-- How It Works Section -->
     <section id="how-it-works" class="section how-section">
         <div class="container">
-            <h2 class="section-title">How It Works</h2>
-            
+            <h2 class="section-title">How it works</h2>
+
             <div class="role-tabs">
-                <button class="tab-btn active" data-tab="organizer">For Organizers</button>
-                <button class="tab-btn" data-tab="voter">For Voters</button>
+                <button class="tab-btn active" data-tab="organizer">For organisers</button>
+                <button class="tab-btn" data-tab="voter">For voters</button>
             </div>
-            
+
             <div class="tab-content active" id="organizer">
                 <div class="steps">
                     <div class="step">
                         <div class="step-number">1</div>
                         <div class="step-content">
-                            <h3>Configure Your Election</h3>
-                            <p>Define questions, answer options, eligibility rules, anonymity levels, and result disclosure policies.</p>
+                            <h3>Configure</h3>
+                            <p>Questions and options, schedule, eligibility (public, one invite key, or one key per voter), revote limit, and the minimum group size <em>k</em> for reporting.</p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">2</div>
                         <div class="step-content">
-                            <h3>Publish & Fund</h3>
-                            <p>Connect JoyID wallet and fund the event. We create on-chain cells for metadata, ballots, and results.</p>
+                            <h3>Choose trustees</h3>
+                            <p>The trustees create the election key together. Each holds one share; the whole key never exists anywhere.</p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">3</div>
                         <div class="step-content">
-                            <h3>Distribute Invites</h3>
-                            <p>Share the event URL or QR code with invite keys via email, SMS, or in-person.</p>
+                            <h3>Publish and fund</h3>
+                            <p>One transaction creates the election's rules, its fund and an empty ballot box. The locked CKB comes back after the audit period.</p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">4</div>
                         <div class="step-content">
-                            <h3>Release Results</h3>
-                            <p>After the configured time and threshold confirmations, results automatically unlock and decrypt.</p>
+                            <h3>Seal and release</h3>
+                            <p>After voting ends, the box is sealed and the encrypted ballots are summed. After the release time the trustees publish their decryption shares, and anyone can submit the result.</p>
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <div class="tab-content" id="voter">
                 <div class="steps">
                     <div class="step">
                         <div class="step-number">1</div>
                         <div class="step-content">
-                            <h3>Open Event Link</h3>
-                            <p>Click the invitation link or scan QR code to access the voting page.</p>
+                            <h3>Open the link</h3>
+                            <p>Use the invitation link or QR code. Nothing to install.</p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">2</div>
                         <div class="step-content">
                             <h3>Connect JoyID</h3>
-                            <p>Authenticate with your JoyID wallet. No funds needed - organizer covers all fees.</p>
+                            <p>Your passkey derives a pseudonym for this election only. An empty wallet is enough.</p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">3</div>
                         <div class="step-content">
-                            <h3>Cast Your Ballot</h3>
-                            <p>Make your choices and submit. Your ballot is encrypted before leaving your browser.</p>
+                            <h3>Cast your ballot</h3>
+                            <p>Your browser encrypts the ballot, adds a proof that it is a valid vote, and sends it to the relay. You get a signed receipt.</p>
                         </div>
                     </div>
                     <div class="step">
                         <div class="step-number">4</div>
                         <div class="step-content">
-                            <h3>Verify & Audit</h3>
-                            <p>Receive a receipt to verify ballot inclusion. After release, audit the final tallies independently.</p>
+                            <h3>Verify</h3>
+                            <p>Check that your ballot is included. After release, anyone can recheck every proof, every sum and the final count from public chain data.</p>
                         </div>
                     </div>
                 </div>
@@ -197,49 +226,43 @@
         </div>
     </section>
 
-    <!-- Security Section -->
-    <section id="security" class="section security-section">
+    <!-- Status Section -->
+    <section id="status" class="section security-section">
         <div class="container">
-            <h2 class="section-title">Security Model</h2>
-            <p class="section-subtitle">Multiple layers of protection for your vote</p>
-            
-            <div class="security-grid">
-                <div class="security-item">
-                    <h4>🔐 Confidentiality</h4>
-                    <p>Client-side encryption with event public keys. Ballots remain confidential until aggregate decryption.</p>
-                </div>
-                <div class="security-item">
-                    <h4>🔗 Integrity</h4>
-                    <p>Immutable on-chain cells record every state change. Frontend code hash committed to prevent tampering.</p>
-                </div>
-                <div class="security-item">
-                    <h4>👤 Anonymity</h4>
-                    <p>K-anonymity enforcement with automatic group merging. Sub-threshold groups protected from de-anonymization.</p>
-                </div>
-                <div class="security-item">
-                    <h4>⏰ Availability</h4>
-                    <p>Threshold-based result release prevents organizer censorship. Anyone can trigger tallying after deadline.</p>
-                </div>
-                <div class="security-item">
-                    <h4>✓ Auditability</h4>
-                    <p>Independent verification of ballot inclusion and tally computation from public blockchain data.</p>
-                </div>
-                <div class="security-item">
-                    <h4>🛡️ Sybil Mitigation</h4>
-                    <p>CAPTCHA, rate limits, email verification, and per-voter keys to reduce automated voting attacks.</p>
-                </div>
+            <h2 class="section-title">What this prototype does today</h2>
+            <p class="section-subtitle">The prototype shows the user flow on CKB testnet. It was built for an earlier design (v1), so the security guarantees above are not in it yet.</p>
+
+            <div class="status-table-wrap">
+                <table class="status-table">
+                    <thead>
+                        <tr><th scope="col">Part</th><th scope="col">Design (v2.3)</th><th scope="col">This prototype</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><th scope="row">Ballot encryption</th><td>One encrypted 0/1 per option under the trustees' joint key</td><td class="gap">Encrypted in the browser with a key the organiser holds</td></tr>
+                        <tr><th scope="row">Counting</th><td>Added up while encrypted; only sums decrypted by <em>t</em> trustees</td><td class="gap">The organiser decrypts the ballots</td></tr>
+                        <tr><th scope="row">On-chain script</th><td>Frozen; checks every ballot, the sums and the result</td><td class="gap">A stub that accepts every transaction</td></tr>
+                        <tr><th scope="row">Voter wallet</th><td>Derives a pseudonym only; never on chain</td><td class="gap">Connects directly; no pseudonym yet</td></tr>
+                        <tr><th scope="row">Submission</th><td>Ballot Relay: sponsored, batched, shuffled, with receipts</td><td class="gap">Submitted directly</td></tr>
+                        <tr><th scope="row">User flow</th><td>Create, invite, vote, revote, release, audit</td><td class="ok">Clickable on testnet</td></tr>
+                    </tbody>
+                </table>
             </div>
+
+            <p class="status-links">
+                <a href="https://github.com/psawyerberlin/votesecure/blob/main/docs/architecture.md" target="_blank" rel="noopener">Read the full design<span class="visually-hidden"> (opens in a new tab)</span></a>
+                <a href="about.html#unsolved" target="_blank" rel="noopener">See what is still unsolved<span class="visually-hidden"> (opens in a new tab)</span></a>
+            </p>
         </div>
     </section>
 
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="container">
-            <h2>Ready to Get Started?</h2>
-            <p>Create your first election or participate in ongoing votes</p>
+            <h2>Try the flow</h2>
+            <p>Create a test election or vote in one. Use a fresh JoyID wallet; this runs on the CKB testnet.</p>
             <div class="cta-buttons">
-                <a href="web/organizer.html" class="btn btn-primary">Create Election</a>
-                <a href="web/voter.html" class="btn btn-outline">Vote Now</a>
+                <a href="web/organizer.html" class="btn btn-primary">Create a test election</a>
+                <a href="web/voter.html" class="btn btn-outline">Vote in a test election</a>
             </div>
         </div>
     </section>
@@ -250,11 +273,13 @@
 			<div class="footer-content">
 				<div class="footer-brand">
 					<div class="nav-brand">
-						<svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-							<path d="M9 11l3 3L22 4"></path>
-							<path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
-						</svg>
-						<span class="logo-text">VoteSecure</span>
+						<a href="/">
+							<svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+								<path d="M9 11l3 3L22 4"></path>
+								<path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+							</svg>
+							<span class="logo-text">VoteSecure</span>
+						</a>
 					</div>
 					<p>Privacy-preserving voting on Nervos CKB</p>
 				</div>
@@ -263,26 +288,25 @@
 						<h4>Product</h4>
 						<a href="web/organizer.html">Create Election</a>
 						<a href="web/voter.html">Vote</a>
-						<a href="#features">Features</a>
+						<a href="#features">The idea</a>
 					</div>
 					<div class="footer-column">
 						<h4>Resources</h4>
-						<a href="#how-it-works">Documentation</a>
-						<a href="#security">Security</a>
-						<a href="https://github.com/psawyerberlin/votesecure/" target="_blank" rel="noopener noreferrer">GitHub</a>
+						<a href="https://github.com/psawyerberlin/votesecure/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation<span class="visually-hidden"> (opens in a new tab)</span></a>
+						<a href="about.html" target="_blank" rel="noopener">About the project<span class="visually-hidden"> (opens in a new tab)</span></a>
+						<a href="https://github.com/psawyerberlin/votesecure/" target="_blank" rel="noopener noreferrer">GitHub<span class="visually-hidden"> (opens in a new tab)</span></a>
 					</div>
 					<div class="footer-column">
 						<h4>Legal</h4>
-						<a href="web/privacy.html">Privacy Policy</a>
-						<a href="web/terms.html">Terms of Service</a>
-						<a href="https://github.com/psawyerberlin/votesecure/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Open Source (MIT License)</a>
+						<a href="datenschutz.html">Datenschutz / Privacy</a>
+						<a href="impressum.html">Impressum</a>
+						<a href="https://github.com/psawyerberlin/votesecure/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Open Source (MIT License)<span class="visually-hidden"> (opens in a new tab)</span></a>
 					</div>
 				</div>
 			</div>
 			<div class="footer-bottom">
-				<p>&copy; VoteSecure (Version 0.9). Open source under MIT License.</p>
-				<p>Pre-release: This page currently connects to the CKB Testnet; mainnet support will be added in the final release.</p>
-				<p>Do not use for real elections/poll or funds. Data may be reset.<p>
+				<p>&copy; VoteSecure. Prototype v0.9 (v1 design) &middot; Design: Architecture v2.3. Open source under the MIT License.</p>
+				<p>Runs on the CKB testnet. Do not use for real elections, polls or funds. Data may be reset.</p>
 			</div>
 		</div>
 	</footer>

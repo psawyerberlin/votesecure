@@ -839,10 +839,9 @@ async function initiateWithdrawal(eventId) {
         const confirmed = confirm(
             `Withdraw Event Funds\n\n` +
             `This will:\n` +
-            `• Withdraw ${remainingCKB} CKB from EventFund\n` +
-            `• Clean up Metadata cell\n` +
-            `• Clean up Result cell\n` +
-            `• Return all capacity to your wallet\n\n` +
+            `• Return the EventFund (${remainingCKB} CKB), Metadata and Result cells to your wallet\n` +
+            `• Return each ballot cell's CKB to the voter who paid for it\n` +
+            `• You pay the small transaction fee\n\n` +
             `The event will be permanently closed.\n\n` +
             `Continue?`
         );

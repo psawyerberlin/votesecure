@@ -1,0 +1,505 @@
+/* =============================================================================
+   VoteSecure — recruitment site
+   -----------------------------------------------------------------------------
+   Colour is testimony, not decoration.
+     Seal red  (--seal)     marks only what is unsolved / open.
+     Green     (--verified) marks only what verifiably runs.
+   Every other surface is paper, ink and pencil. If a red or green mark is not
+   carrying that meaning, it does not belong on the page.
+
+   Red and green are never the ONLY signal for a state: the OPEN stamp is a
+   bordered box containing the word "OPEN"; the "runs" list uses a check glyph
+   and the word. Both parse with all colour removed.
+   ========================================================================== */
+
+/* ---- Fonts: self-hosted, woff2 only, subset to the glyphs the site uses ---- */
+@font-face {
+  font-family: "Public Sans";
+  src: url("fonts/public-sans-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Public Sans";
+  src: url("fonts/public-sans-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Public Sans";
+  src: url("fonts/public-sans-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* --------------------------------- Tokens --------------------------------- */
+:root {
+  --paper:    #FFFFFF;
+  --manila:   #F4F1EA;
+  --ink:      #16202A;
+  --pencil:   #54606A;   /* darkened from the brief's #6B7280 to pass AA on paper */
+  --seal:     #A3261C;
+  --verified: #2C7A5A;
+
+  --measure: 63ch;
+  --gutter: clamp(1.25rem, 5vw, 3rem);
+
+  --font: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+}
+
+/* ---------------------------------- Reset --------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 1.0625rem;          /* ~17px */
+  line-height: 1.6;
+  font-synthesis: none;
+}
+h1, h2, h3, p, ul, ol, figure, dl { margin: 0; }
+img, svg { max-width: 100%; }
+
+/* -------------------------------- Typography ------------------------------ */
+h1 {
+  font-weight: 700;
+  font-size: clamp(1.85rem, 1.2rem + 2.7vw, 2.85rem);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  max-width: 20ch;
+}
+h2 {
+  font-weight: 700;
+  font-size: clamp(1.4rem, 1.1rem + 1.3vw, 1.9rem);
+  line-height: 1.2;
+  letter-spacing: -0.005em;
+}
+h3 {
+  font-weight: 600;
+  font-size: 1.115rem;
+  line-height: 1.3;
+}
+.num { font-variant-numeric: tabular-nums; }
+code, kbd, samp, .mono {
+  font-family: var(--mono);
+  font-size: 0.92em;
+}
+
+/* --------------------------------- Links --------------------------------- */
+a {
+  color: var(--ink);
+  text-decoration-line: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.15em;
+}
+a:hover { text-decoration-thickness: 3px; }
+:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 0.6em 1em;
+  text-decoration: none;
+  z-index: 10;
+}
+.skip:focus { left: 0; }
+
+/* Visible to screen readers only (e.g. "(opens in a new tab)" on external links). */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------- Structure ------------------------------- */
+.wrap {
+  max-width: calc(var(--measure) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+.wrap--wide { max-width: 68rem; }
+
+main > section { padding-block: clamp(2.5rem, 6vw, 4.5rem); }
+main > section + section { border-top: 1px solid var(--pencil); }
+.band { background: var(--manila); border-top: 1px solid var(--pencil); }
+main > section.band + section { border-top: 1px solid var(--pencil); }
+
+.prose p + p,
+.prose h2 + p,
+.prose p + h2 { margin-top: 1rem; }
+.prose h2 + p { margin-top: 0.85rem; }
+.prose p { max-width: var(--measure); }
+.prose h2 { margin-top: 0; }
+.prose h2 ~ h2 { margin-top: 2.25rem; }
+
+.fineprint {
+  font-size: 0.94rem;
+  color: var(--pencil);
+  max-width: var(--measure);
+}
+
+/* -------------------------------- Masthead ------------------------------- */
+/* Accept either class on the site header. */
+.masthead,
+body > header.navbar {
+  border-bottom: 3px double var(--ink);
+  background: var(--paper);
+}
+.masthead__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  padding-block: 0.9rem;
+}
+.wordmark,
+.nav-brand,
+.nav-brand a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.wordmark:hover .logo-text,
+.nav-brand:hover .logo-text,
+.nav-brand a:hover .logo-text { text-decoration: underline; text-decoration-thickness: 2px; }
+.logo-icon {
+  width: 1.45rem;
+  height: 1.45rem;
+  flex: none;
+  stroke-width: 2.25;
+}
+.jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  margin-left: auto;
+  font-size: 0.95rem;
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+}
+
+.wordmark__icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+}
+
+/* --------------------------------- Hero --------------------------------- */
+.hero { padding-top: clamp(2.25rem, 5vw, 3.5rem); }
+.hero .lede {
+  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.3rem);
+  line-height: 1.5;
+  max-width: 46ch;
+  margin-top: 1.1rem;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.5rem;
+  margin-top: 1.6rem;
+}
+
+.btn {
+  display: inline-block;
+  background: var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 0.62em 1.35em;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+.btn:hover {
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+}
+.plain { font-weight: 600; }
+
+/* Hero preview of the count sheet: the list of what is not solved */
+.unsolved-preview {
+  border: 2px solid var(--ink);
+  padding: 1rem 1.15rem;
+  margin-top: 2rem;
+  max-width: 34rem;
+}
+.unsolved-preview__h {
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+.unsolved-preview ul {
+  list-style: none;
+  padding: 0;
+}
+.unsolved-preview li {
+  padding: 0.28rem 0;
+  padding-left: 1.4rem;
+  position: relative;
+}
+.unsolved-preview li + li { border-top: 1px solid var(--pencil); }
+.unsolved-preview li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 0.7rem;
+  height: 0;
+  border-top: 2px solid var(--seal);
+}
+
+/* "No token" stamp strip */
+.stamp-strip {
+  border: 2px solid var(--ink);
+  border-left-width: 8px;
+  padding: 0.8rem 1rem;
+  margin-top: 1.5rem;
+  max-width: 40rem;
+  font-weight: 600;
+}
+
+/* -------------------------------- Thesis -------------------------------- */
+.thesis p {
+  font-size: clamp(1.15rem, 1rem + 0.7vw, 1.4rem);
+  line-height: 1.45;
+  max-width: 40ch;
+  border-left: 4px solid var(--ink);
+  padding-left: 1.1rem;
+}
+
+/* ------------------------- The count sheet ------------------------- */
+.unsolved .intro {
+  margin-top: 0.8rem;
+  max-width: var(--measure);
+  color: var(--pencil);
+}
+.count-sheet {
+  margin-top: 1.8rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  border-right: 0;
+}
+.problem {
+  border-right: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  padding: 1.15rem 1.25rem 1.35rem;
+}
+.problem h3 { margin: 0.55rem 0 0.5rem; }
+.problem p { max-width: 46ch; }
+
+.stamp {
+  display: inline-block;
+  border: 2px solid currentColor;
+  color: var(--seal);
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.12em 0.5em;
+  transform: rotate(-3deg);
+  transform-origin: left center;
+}
+.after { margin-top: 1.4rem; }
+
+/* ------------------------------- Apply ------------------------------- */
+.apply h2 { margin-bottom: 0.9rem; }
+.apply p { max-width: var(--measure); }
+.apply p + p { margin-top: 0.9rem; }
+.ask {
+  margin: 1.3rem 0;
+  padding-left: 1.4rem;
+  max-width: var(--measure);
+}
+.ask li { padding: 0.3rem 0; }
+.ask li::marker { font-weight: 700; }
+.apply .alt {
+  font-size: 0.94rem;
+  color: var(--pencil);
+  margin-top: 0.9rem;
+}
+.apply .fineprint { margin-top: 1.3rem; }
+
+/* ----------------------------- Prototype ----------------------------- */
+.prototype .wrap { max-width: 52rem; }
+.prototype h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.prototype p,
+.prototype ul { font-size: 0.96rem; max-width: 54ch; }
+.prototype p + p,
+.prototype ul + p { margin-top: 0.75rem; }
+.runs {
+  list-style: none;
+  padding: 0;
+  margin: 0.7rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.5rem;
+}
+.runs li { position: relative; padding-left: 1.5rem; }
+.runs li::before {
+  content: "\2713";           /* check mark — carries meaning without colour */
+  position: absolute;
+  left: 0;
+  color: var(--verified);
+  font-weight: 700;
+}
+
+/* ------------------------------ Colophon ----------------------------- */
+.colophon {
+  border-top: 3px double var(--ink);
+  padding-block: 1.6rem 2.2rem;
+  font-size: 0.95rem;
+}
+.colophon ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+}
+.colophon li {
+  padding-right: 0.85rem;
+  margin-right: 0.85rem;
+  border-right: 1px solid var(--pencil);
+}
+.colophon li:last-child { border-right: 0; margin-right: 0; padding-right: 0; }
+.colophon .repeat {
+  margin-top: 0.8rem;
+  color: var(--pencil);
+}
+
+/* ===================== Rendered document (/charter) ===================== */
+.doc { padding-block: clamp(2rem, 5vw, 3.5rem); overflow-wrap: break-word; }
+.doc .wrap { max-width: calc(72ch + var(--gutter) * 2); }
+.doc a { overflow-wrap: anywhere; }
+.doc h1 { margin-bottom: 0.6rem; }
+.doc h2 {
+  margin-top: 2.4rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--pencil);
+}
+.doc h3 { margin-top: 1.6rem; }
+.doc p, .doc li { max-width: 72ch; }
+.doc p + p,
+.doc p + ul,
+.doc p + ol,
+.doc ul + p,
+.doc ol + p,
+.doc h1 + p { margin-top: 0.9rem; }
+.doc ul, .doc ol { margin: 0.9rem 0; padding-left: 1.5rem; }
+.doc li { padding: 0.15rem 0; }
+.doc hr {
+  border: 0;
+  border-top: 3px double var(--ink);
+  margin: 2.4rem 0;
+}
+.doc a { color: var(--ink); }
+.doc code {
+  background: var(--manila);
+  padding: 0.1em 0.35em;
+  border: 1px solid var(--pencil);
+}
+.doc blockquote {
+  margin: 1.1rem 0;
+  padding: 0.6rem 0 0.6rem 1.1rem;
+  border-left: 4px solid var(--pencil);
+  color: var(--pencil);
+  font-size: 0.97rem;
+}
+.doc blockquote p { max-width: 68ch; }
+.doc blockquote p + p { margin-top: 0.6rem; }
+
+.doc .table-scroll { overflow-x: auto; margin: 1.2rem 0; }
+.doc table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.97rem;
+}
+.doc th, .doc td {
+  border: 1px solid var(--ink);
+  padding: 0.5rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+.doc th { font-weight: 700; background: var(--manila); }
+
+/* #TO_BE_IMPROVED# markers in the Charter, rendered as open-item flags */
+.tbi {
+  display: inline-block;
+  border: 2px solid var(--seal);
+  color: var(--seal);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.05em 0.4em;
+  vertical-align: 0.08em;
+}
+
+.doc-note {
+  margin-bottom: 1.6rem;
+  padding: 0.8rem 1rem;
+  border: 2px solid var(--ink);
+  font-size: 0.95rem;
+  max-width: 72ch;
+}
+
+/* ------------------------------- Motion ------------------------------ */
+/* The one deliberate moment: the OPEN stamps ink in, once, on load. Pure CSS
+   and animation (not transition) with fill-mode both, so if the animation never
+   runs the stamps still rest in their normal, fully visible state. */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+
+  .count-sheet .stamp { animation: stamp-in 0.4s ease-out both; }
+  .count-sheet .problem:nth-child(2) .stamp { animation-delay: 0.08s; }
+  .count-sheet .problem:nth-child(3) .stamp { animation-delay: 0.16s; }
+  .count-sheet .problem:nth-child(4) .stamp { animation-delay: 0.24s; }
+
+  @keyframes stamp-in {
+    from { opacity: 0; transform: rotate(1deg) scale(1.16); }
+    to   { opacity: 1; transform: rotate(-3deg) scale(1); }
+  }
+}
+
+/* --------------------------- Narrow screens -------------------------- */
+@media (max-width: 40rem) {
+  .count-sheet { grid-template-columns: 1fr; }
+  .jump { margin-left: 0; width: 100%; }
+}
