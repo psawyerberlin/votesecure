@@ -1,3 +1,5 @@
+> **Note (Nov 2026):** this guide describes the v1 prototype in `web/` and `src/`. It predates the repository cleanup, so some paths below (e.g. `documentation/`) no longer exist; design documents now live in `docs/`. The current design is `docs/architecture.md` (v2.3).
+
 # VoteSecure Local Development Guide
 
 This guide explains how to work with VoteSecure in a local development environment, with or without Claude Code.

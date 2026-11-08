@@ -47,3 +47,14 @@ node_modules/
 
 # Windows "mark of the web" metadata
 *:Zone.Identifier
+
+# Build output of the on-chain script
+target/
+
+# Local notes and Claude Code local settings (never commit)
+PS_Local_Notes/
+.claude/settings.local.json
+
+# Site package for manual upload (scripts/package-site.sh)
+site-dist/
+site-dist.zip

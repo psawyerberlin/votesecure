@@ -103,7 +103,9 @@
             <h3>Eligibility without identity</h3>
             <p>Only eligible people may vote, exactly once. No voter's identity or wallet
               may ever appear on chain. Nobody, including the organiser and including us,
-              may be able to link a ballot to a person. Anonymous credentials, blind
+              may be able to link a ballot to a person. The current design checks
+              eligibility on chain and never decrypts a single ballot, but whoever issues
+              the voter keys can still tell who voted. Anonymous credentials, blind
               signatures and nullifiers are the obvious directions. None of them is chosen
               yet.</p>
           </article>
@@ -114,15 +116,19 @@
             <p>A blockchain records when everything happened. Submission timing,
               transaction graphs and fee sources all leak. Batching and shuffling help.
               They are not a proof. We need an anonymity model we can state precisely and
-              defend.</p>
+              defend. And a chain cannot tell that a deadline has passed, so even closing
+              the vote is a design problem.</p>
           </article>
 
           <article class="problem">
             <p class="stamp">Open</p>
             <h3>Removing the trusted parts</h3>
-            <p>Today a relay is trusted for liveness, and tally-key release depends on
-              drand. Both are single points of failure and both must go. What replaces
-              them: a set of voting nodes, threshold cryptography, something else? Open.</p>
+            <p>Ballots are counted while still encrypted, and only the totals are ever
+              decrypted. That decryption needs several trustees together, each holding one
+              share of the key. But trustees who collude could read ballots, and trustees
+              who disappear leave an election without a result. A single relay can still
+              delay ballots. Who the trustees are, how we show they are independent, and
+              whether the proof checks fit on chain at all: open.</p>
           </article>
 
           <article class="problem">
@@ -135,7 +141,7 @@
           </article>
         </div>
 
-        <p class="after"><a href="https://github.com/psawyerberlin/votesecure/blob/main/documentation/votesecure_architecture.md" target="_blank" rel="noopener">Full technical detail lives in the repository <span aria-hidden="true">&rarr;</span><span class="visually-hidden"> (opens in a new tab)</span></a></p>
+        <p class="after"><a href="https://github.com/psawyerberlin/votesecure/blob/main/docs/architecture.md" target="_blank" rel="noopener">Full technical detail lives in the repository <span aria-hidden="true">&rarr;</span><span class="visually-hidden"> (opens in a new tab)</span></a></p>
       </div>
     </section>
 
@@ -145,10 +151,11 @@
         <p>Contribution is the only currency. Every quarter, contributors award each other
           <strong>Merit-Voice (MV)</strong> &mdash; a non-transferable unit that can never
           be bought, at any price. MV decides voting power, capped at
-          <span class="num">15%</span> for any one person, and decides how any donations
+          <span class="num">15%</span> for any one person once there are seven or more
+          contributors, and decides how any donations
           the project ever receives are split.</p>
-        <p>The Steward runs the first rounds and says so publicly. Every round and every
-          decision is put to a public vote first. The intention is to hand governance to
+        <p>The Steward runs the first rounds and says so publicly. Every round result and
+          every decision is put to a public poll before it is carried out. The intention is to hand governance to
           VoteSecure itself once it can run its own elections.</p>
         <p class="fineprint">Everything is public: the code (MIT), the ledger, every
           award, every vote, and every application to join.</p>
@@ -174,7 +181,8 @@
 
         <p>Applications are public. The Steward selects the founding cohort against the
           criteria in the Charter, and publishes every application and the reason for
-          every decision. AI is used only to summarise applications, never to decide.</p>
+          every decision. AI may be used to summarise and shortlist applications. The
+          Steward makes every decision.</p>
         <p>If fewer than five people qualify by 1 March 2027, the first round moves one
           quarter and we say so.</p>
 
@@ -200,14 +208,16 @@
     <section id="prototype" class="prototype">
       <div class="wrap">
         <h2>There is already code</h2>
-        <p>A working prototype runs against the CKB test network:</p>
+        <p>A prototype dApp runs on the CKB test network:</p>
         <ul class="runs">
-          <li>ballot encryption</li>
-          <li>on-chain submission</li>
-          <li>deterministic public tallying</li>
+          <li>ballot encryption in the browser</li>
+          <li>on-chain event publishing and ballot submission</li>
+          <li>results the organiser decrypts</li>
         </ul>
-        <p>It is incomplete and it is not secure enough for a real election. It exists so
-          you can see that this is engineering, not a whitepaper.</p>
+        <p>It follows the earlier v1 design, not the current architecture, and its
+          on-chain script does not yet check anything. It is not secure enough for a real
+          election. It exists so you can see that this is engineering, not a
+          whitepaper.</p>
         <p class="actions">
           <a class="plain" href="demo.html">Open the prototype <span aria-hidden="true">&rarr;</span></a>
           <a class="plain" href="https://github.com/psawyerberlin/votesecure" target="_blank" rel="noopener">Read the code <span aria-hidden="true">&rarr;</span><span class="visually-hidden"> (opens in a new tab)</span></a>

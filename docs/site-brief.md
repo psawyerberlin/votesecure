@@ -1,6 +1,11 @@
 # votesecure.net — Site Brief
 
-**Version:** 0.1 (draft, for Claude Code)
+**Version:** 0.3 (draft, for Claude Code)
+**Status:** v0.1 was implemented on branch `claude/recruitment-site`, not yet
+merged to `main`. v0.2 corrected copy that contradicted the architecture, the
+Charter and the actual prototype. v0.3 aligns the open-problems copy (§4.4) with
+Architecture v2.3: homomorphic tallying with trustees replaces drand. Apply both
+to that branch.
 **Owner:** Patrick Sawyer (Steward, Phase 0)
 **Repo:** https://github.com/psawyerberlin/votesecure
 **Companion document:** `CHARTER.md` (VoteSecure Contributor Charter v0.1)
@@ -131,23 +136,35 @@ Headline: **What we have not solved**
 Introduce with one line: *This is the honest state of the project. If one of these is
 your field, we would like to hear from you.*
 
-Four workstreams. Each shows the problem, not a solution.
+Four workstreams. Each shows the problem, not a solution. They group the
+numbered open problems in §11 of `docs/architecture.md` (v2.3) for a
+general reader: workstream 1 covers items 11 and 8; workstream 2 covers 3 and
+12; workstream 3 covers 5, 14 and 15; workstream 4 covers 9 and 10 plus the
+Fiber and RGB++ directions in the White Paper's Future Work. Items 2, 4, 7 and
+13 are resolved by the v2.3 design and do not appear. The architecture list
+stays the authority; if it changes, update this section.
 
 **1 · Eligibility without identity**
 > Only eligible people may vote, exactly once. No voter's identity or wallet may ever
 > appear on chain. Nobody, including the organiser and including us, may be able to link
-> a ballot to a person. Anonymous credentials, blind signatures and nullifiers are the
-> obvious directions. None of them is chosen yet.
+> a ballot to a person. The current design checks eligibility on chain and never
+> decrypts a single ballot, but whoever issues the voter keys can still tell who voted.
+> Anonymous credentials, blind signatures and nullifiers are the obvious directions.
+> None of them is chosen yet.
 
 **2 · Anonymity against a timestamped ledger**
 > A blockchain records when everything happened. Submission timing, transaction graphs
 > and fee sources all leak. Batching and shuffling help. They are not a proof. We need an
-> anonymity model we can state precisely and defend.
+> anonymity model we can state precisely and defend. And a chain cannot tell that a
+> deadline has passed, so even closing the vote is a design problem.
 
 **3 · Removing the trusted parts**
-> Today a relay is trusted for liveness, and tally-key release depends on drand. Both are
-> single points of failure and both must go. What replaces them: a set of voting nodes,
-> threshold cryptography, something else? Open.
+> Ballots are counted while still encrypted, and only the totals are ever decrypted.
+> That decryption needs several trustees together, each holding one share of the key.
+> But trustees who collude could read ballots, and trustees who disappear leave an
+> election without a result. A single relay can still delay ballots. Who the trustees
+> are, how we show they are independent, and whether the proof checks fit on chain at
+> all: open.
 
 **4 · Cost, wallets and anchoring**
 > A voter should not need a wallet, a token balance, or any prior blockchain knowledge,
@@ -156,7 +173,7 @@ Four workstreams. Each shows the problem, not a solution.
 > election scale.
 
 Close the section with a link: *Full technical detail lives in the repository →*
-(links to `votesecure_architecture.md` on GitHub.)
+(links to `docs/architecture.md` on GitHub.)
 
 ### 4.5 How the project is governed
 
@@ -164,11 +181,11 @@ Headline: **Nobody owns this**
 
 > Contribution is the only currency. Every quarter, contributors award each other
 > **Merit-Voice (MV)** — a non-transferable unit that can never be bought, at any price.
-> MV decides voting power, capped at 15% for any one person, and decides how any donations
-> the project ever receives are split.
+> MV decides voting power, capped at 15% for any one person once there are seven or more
+> contributors, and decides how any donations the project ever receives are split.
 >
-> The Steward runs the first rounds and says so publicly. Every round and every decision
-> is put to a public vote first. The intention is to hand governance to VoteSecure itself
+> The Steward runs the first rounds and says so publicly. Every round result and every
+> decision is put to a public poll before it is carried out. The intention is to hand governance to VoteSecure itself
 > once it can run its own elections.
 
 Small print under it:
@@ -197,7 +214,7 @@ Then, plainly:
 
 > Applications are public. The Steward selects the founding cohort against the criteria
 > in the Charter, and publishes every application and the reason for every decision. AI
-> is used only to summarise applications, never to decide.
+> may be used to summarise and shortlist applications. The Steward makes every decision.
 >
 > If fewer than five people qualify by 1 March 2027, the first round moves one quarter and
 > we say so.
@@ -214,9 +231,11 @@ Add one line, because it prevents the most common wrong assumption:
 
 Headline: **There is already code**
 
-> A working prototype runs on a local CKB devnet: ballot encryption, on-chain submission,
-> deterministic public tallying. It is incomplete and it is not secure enough for a real
-> election. It exists so you can see that this is engineering, not a whitepaper.
+> A prototype dApp runs on CKB testnet: ballot encryption in the browser, on-chain event
+> publishing and ballot submission, and results the organiser decrypts. It follows the
+> earlier v1 design, not the current architecture, and its on-chain script does not yet
+> check anything. It is not secure enough for a real election. It exists so you can see
+> that this is engineering, not a whitepaper.
 
 Actions: **Open the prototype →** `/demo` · **Read the code →** GitHub
 
