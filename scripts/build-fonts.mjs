@@ -23,7 +23,7 @@ import subsetFont from 'subset-font';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT_DIR = join(ROOT, 'assets', 'fonts');
 
-// Pages whose visible text is set in Public Sans. demo.html and web/* use the
+// Pages whose visible text is set in Public Sans. index.html (prototype) and web/* use the
 // system font stack and are deliberately excluded.
 const PAGES = ['index.html', 'charter.html', 'impressum.html', 'datenschutz.html'];
 

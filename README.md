@@ -6,7 +6,7 @@ to a voter.
 
 > **Status: in development. Nothing here is safe for a real election.**
 > The site at [votesecure.net](https://votesecure.net) includes a clickable
-> prototype on the CKB **testnet**. It follows the superseded v1 design, the
+> prototype on the CKB **testnet** as its front page. It follows the superseded v1 design, the
 > organiser holds the decryption key, and its on-chain script accepts every
 > transaction, so it gives no on-chain guarantees. The current design
 > (Architecture v2.3) is not implemented yet. Many issues remain open.
@@ -29,8 +29,8 @@ In short:
 |---|---|
 | [`docs/`](docs/README.md) | **All design documentation. This repository is the source of truth.** Start with `docs/README.md` |
 | [`CHARTER.md`](CHARTER.md) | Contributor Charter (governance). `charter.html` is generated from it |
-| `index.html`, `charter.html`, `impressum.html`, `datenschutz.html`, `assets/` | The votesecure.net recruitment site (static) |
-| `demo.html`, `web/`, `src/` | The v1 prototype dApp (testnet, non-validating) |
+| `index.html`, `web/`, `src/` | The v1 prototype dApp; `index.html` is the site's front page and explains the v2.3 concept (testnet, non-validating) |
+| `about.html`, `charter.html`, `impressum.html`, `datenschutz.html`, `assets/` | Project and recruitment pages (static) |
 | `PythonSetup/` | v1 on-chain lock script and deployment helper (stub; every check returns success) |
 | `scripts/` | `build-charter.mjs`, `build-fonts.mjs`, `package-site.sh` |
 | [`DEPLOY.md`](DEPLOY.md) | How to put the site online |
@@ -54,4 +54,4 @@ clearly in a language other than English. See [CONTRIBUTING.md](CONTRIBUTING.md)
 - Steward: Patrick Sawyer (psawyer@gmx.de)
 - AI assistance: drafting and code support from Claude, GPT-5 and Grok
 - Licence: MIT
-- Site: https://votesecure.net · prototype at `/demo.html`
+- Site: https://votesecure.net (prototype) · project page at `/about.html`

@@ -1,246 +1,353 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>VoteSecure — fair and verifiable voting on a public blockchain</title>
-  <meta name="description" content="A volunteer project building fair, verifiable, decentralised voting on the Nervos CKB blockchain. No funding, no deadline, several unsolved problems. We are looking for contributors.">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/public-sans-400.woff2" crossorigin>
-  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/public-sans-700.woff2" crossorigin>
-  <link rel="stylesheet" href="assets/site.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoteSecure — verifiable, private voting on Nervos CKB (testnet prototype)</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="web/votesecure.css">
+    <style>
+        .prototype-banner {
+            background: #A3261C;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 15px;
+            line-height: 1.5;
+            padding: 12px 20px;
+            text-align: center;
+        }
+        .prototype-banner strong { font-weight: 700; }
+        .prototype-banner a { color: #fff; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+        .prototype-banner p { margin: 0 auto; max-width: 70ch; }
+        .status-table-wrap { overflow-x: auto; margin: 0 auto; max-width: 960px; }
+        .status-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; font-size: 15px; line-height: 1.45; }
+        .status-table th, .status-table td { padding: 12px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid #e5e7eb; color: #16202A; }
+        .status-table thead th { background: #16202A; color: #fff; font-weight: 600; }
+        .status-table tbody th { font-weight: 600; white-space: nowrap; }
+        .status-table td.gap { color: #A3261C; }
+        .status-table td.ok { color: #2C7A5A; font-weight: 600; }
+        .status-links { display: flex; gap: 24px; justify-content: center; flex-wrap: wrap; margin-top: 24px; }
+        .status-links a { font-weight: 600; }
+        .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    </style>
 </head>
 <body>
-  <a class="skip" href="#main">Skip to content</a>
-
-  <header class="masthead">
-    <div class="wrap masthead__inner">
-      <a class="wordmark" href="/">
-        <svg class="wordmark__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 11l3 3L22 4"></path>
-          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
-        </svg>
-        <span class="logo-text">VoteSecure</span>
-      </a>
-      <nav class="jump" aria-label="Page sections">
-        <a href="#unsolved">Open problems</a>
-        <a href="#governance">Governance</a>
-        <a href="#apply">Apply</a>
-        <a href="#prototype">Prototype</a>
-      </nav>
+    <div class="prototype-banner" role="alert">
+        <p><strong>Prototype on the CKB testnet &mdash; not for real elections.</strong>
+        It shows the user flow; the security design is not implemented yet.
+        <a href="about.html" target="_blank" rel="noopener">About the project: fair and verifiable voting on a public blockchain<span class="visually-hidden"> (opens in a new tab)</span></a></p>
     </div>
-  </header>
 
-  <main id="main">
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <a href="/">
+                    <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path d="M9 11l3 3L22 4"></path>
+                        <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                    </svg>
+                    <span class="logo-text">VoteSecure</span>
+                </a>
+            </div>
+            <div class="nav-links">
+                <a href="#features">The idea</a>
+                <a href="#how-it-works">How it works</a>
+                <a href="#status">Status</a>
+                <a href="about.html" target="_blank" rel="noopener">About<span class="visually-hidden"> (opens in a new tab)</span></a>
+            </div>
+        </div>
+    </nav>
 
+    <!-- Hero Section -->
     <section class="hero">
-      <div class="wrap">
-        <h1>Fair and verifiable voting on a public blockchain.</h1>
-        <p class="lede">No funding. No deadline. Several unsolved problems. We think it
-          takes ten years, and we are looking for the people who want to spend them on
-          this.</p>
-
-        <p class="actions">
-          <a class="btn" href="#apply">Apply to contribute</a>
-          <a class="plain" href="#unsolved">Read the open problems</a>
-        </p>
-
-        <div class="unsolved-preview" aria-labelledby="unsolved-preview-h">
-          <p id="unsolved-preview-h" class="unsolved-preview__h">Not yet solved</p>
-          <ul>
-            <li>Eligibility without identity</li>
-            <li>Anonymity against a timestamped ledger</li>
-            <li>Removing the trusted parts</li>
-            <li>Cost, wallets and anchoring</li>
-          </ul>
+        <div class="hero-background"></div>
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">
+                    Transparent Voting.<br>
+                    <span class="gradient-text">Private Choices.</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Elections on Nervos CKB that anyone can verify and nobody can link back to a voter.
+                    Ballots are counted while still encrypted: no individual ballot is ever decrypted.
+                </p>
+                <div class="hero-actions">
+                    <a href="web/organizer.html" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                        Create a test election
+                    </a>
+                    <a href="web/voter.html" class="btn btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <path d="M9 11l3 3L22 4"></path>
+                            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+                        </svg>
+                        Vote in a test election
+                    </a>
+                </div>
+            </div>
+            <div class="hero-visual" aria-hidden="true">
+                <div class="floating-card card-1">
+                    <div class="card-icon">🔒</div>
+                    <div class="card-text">Counted while encrypted</div>
+                </div>
+                <div class="floating-card card-2">
+                    <div class="card-icon">✓</div>
+                    <div class="card-text">Script-verified tally</div>
+                </div>
+                <div class="floating-card card-3">
+                    <div class="card-icon">👥</div>
+                    <div class="card-text">Wallet never on chain</div>
+                </div>
+            </div>
         </div>
-
-        <p class="stamp-strip">No token. No investment. No pre-sale. Contribution is the
-          only way in.</p>
-      </div>
     </section>
 
-    <section class="thesis">
-      <div class="wrap">
-        <p>Within ten years, public blockchains will be the most trusted settlement layer
-          in finance. People will then ask why their elections are less verifiable than
-          their money. Building that takes a decade, so it has to start now, in the open,
-          with no owner.</p>
-      </div>
-    </section>
+    <!-- Features Section -->
+    <section id="features" class="section features-section">
+        <div class="container">
+            <h2 class="section-title">The idea</h2>
+            <p class="section-subtitle">What VoteSecure is designed to guarantee (Architecture v2.3)</p>
 
-    <section class="prose">
-      <div class="wrap">
-        <h2>Why this matters</h2>
-        <p>Money on a public chain can be verified by anyone, at any time, without trusting
-          the institution that holds it. Elections cannot. Voters are asked to trust a
-          supplier, an administrator and a machine they will never inspect.</p>
-        <p>Verifiable voting is a harder problem than verifiable money, because a ballot
-          has to be provably counted and permanently unlinkable from the person who cast
-          it. Those two requirements pull against each other. That is why this is not
-          already solved, and why it is worth a decade.</p>
-
-        <h2>Why Nervos CKB</h2>
-        <p>CKB's cell model lets us put arbitrary verification logic on chain instead of
-          fitting voting into a token standard. Lock scripts are programmable, state is
-          explicit, and the chain is proof-of-work anchored. Fiber can cut the per-ballot
-          cost. RGB++ can anchor results to Bitcoin, the chain with the widest trust.</p>
-        <p>We are not tied to CKB by ideology. It is currently the best fit for what an
-          election needs.</p>
-      </div>
-    </section>
-
-    <section id="unsolved" class="unsolved">
-      <div class="wrap wrap--wide">
-        <h2>What we have not solved</h2>
-        <p class="intro">This is the honest state of the project. If one of these is your
-          field, we would like to hear from you.</p>
-
-        <div class="count-sheet">
-          <article class="problem">
-            <p class="stamp">Open</p>
-            <h3>Eligibility without identity</h3>
-            <p>Only eligible people may vote, exactly once. No voter's identity or wallet
-              may ever appear on chain. Nobody, including the organiser and including us,
-              may be able to link a ballot to a person. The current design checks
-              eligibility on chain and never decrypts a single ballot, but whoever issues
-              the voter keys can still tell who voted. Anonymous credentials, blind
-              signatures and nullifiers are the obvious directions. None of them is chosen
-              yet.</p>
-          </article>
-
-          <article class="problem">
-            <p class="stamp">Open</p>
-            <h3>Anonymity against a timestamped ledger</h3>
-            <p>A blockchain records when everything happened. Submission timing,
-              transaction graphs and fee sources all leak. Batching and shuffling help.
-              They are not a proof. We need an anonymity model we can state precisely and
-              defend. And a chain cannot tell that a deadline has passed, so even closing
-              the vote is a design problem.</p>
-          </article>
-
-          <article class="problem">
-            <p class="stamp">Open</p>
-            <h3>Removing the trusted parts</h3>
-            <p>Ballots are counted while still encrypted, and only the totals are ever
-              decrypted. That decryption needs several trustees together, each holding one
-              share of the key. But trustees who collude could read ballots, and trustees
-              who disappear leave an election without a result. A single relay can still
-              delay ballots. Who the trustees are, how we show they are independent, and
-              whether the proof checks fit on chain at all: open.</p>
-          </article>
-
-          <article class="problem">
-            <p class="stamp">Open</p>
-            <h3>Cost, wallets and anchoring</h3>
-            <p>A voter should not need a wallet, a token balance, or any prior blockchain
-              knowledge, and should never pay a fee. Passkey-derived keys with
-              organiser-paid fees are the current direction. Fiber for cost. RGB++ for a
-              Bitcoin anchor. All unproven at election scale.</p>
-          </article>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>No ballot is ever opened</h3>
+                    <p>Each ballot encrypts a 0 or 1 per answer option. Encrypted ballots are added up without being decrypted. Only the sums are decrypted, never a single vote.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🗝️</div>
+                    <h3>Nobody holds the key</h3>
+                    <p>The election key is created jointly by several trustees. Any <em>t</em> of <em>n</em> of them can decrypt a sum. No organiser, relay or developer can read results alone.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>The chain checks the count</h3>
+                    <p>A frozen on-chain script checks a validity proof on every ballot, adds the encrypted ballots itself, and accepts only the tally the trustees' proofs allow.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👤</div>
+                    <h3>Your wallet stays off chain</h3>
+                    <p>JoyID only derives a per-election pseudonym on your device. Your wallet signs no transaction and never appears next to your ballot.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Free for voters</h3>
+                    <p>The organiser funds storage and fees. A Ballot Relay posts ballots in shuffled batches, so even the timing of your vote is hidden.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>Revote, results at release</h3>
+                    <p>Change your vote before the deadline; only the last one counts. During voting only participation is shown. Option totals appear after release, with small groups merged.</p>
+                </div>
+            </div>
         </div>
-
-        <p class="after"><a href="https://github.com/psawyerberlin/votesecure/blob/main/docs/architecture.md" target="_blank" rel="noopener">Full technical detail lives in the repository <span aria-hidden="true">&rarr;</span><span class="visually-hidden"> (opens in a new tab)</span></a></p>
-      </div>
     </section>
 
-    <section id="governance" class="prose">
-      <div class="wrap">
-        <h2>Nobody owns this</h2>
-        <p>Contribution is the only currency. Every quarter, contributors award each other
-          <strong>Merit-Voice (MV)</strong> &mdash; a non-transferable unit that can never
-          be bought, at any price. MV decides voting power, capped at
-          <span class="num">15%</span> for any one person once there are seven or more
-          contributors, and decides how any donations
-          the project ever receives are split.</p>
-        <p>The Steward runs the first rounds and says so publicly. Every round result and
-          every decision is put to a public poll before it is carried out. The intention is to hand governance to
-          VoteSecure itself once it can run its own elections.</p>
-        <p class="fineprint">Everything is public: the code (MIT), the ledger, every
-          award, every vote, and every application to join.</p>
-        <p><a href="charter.html">Read the Contributor Charter <span aria-hidden="true">&rarr;</span></a></p>
-      </div>
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="section how-section">
+        <div class="container">
+            <h2 class="section-title">How it works</h2>
+
+            <div class="role-tabs">
+                <button class="tab-btn active" data-tab="organizer">For organisers</button>
+                <button class="tab-btn" data-tab="voter">For voters</button>
+            </div>
+
+            <div class="tab-content active" id="organizer">
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Configure</h3>
+                            <p>Questions and options, schedule, eligibility (public, one invite key, or one key per voter), revote limit, and the minimum group size <em>k</em> for reporting.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Choose trustees</h3>
+                            <p>The trustees create the election key together. Each holds one share; the whole key never exists anywhere.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Publish and fund</h3>
+                            <p>One transaction creates the election's rules, its fund and an empty ballot box. The locked CKB comes back after the audit period.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Seal and release</h3>
+                            <p>After voting ends, the box is sealed and the encrypted ballots are summed. After the release time the trustees publish their decryption shares, and anyone can submit the result.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="voter">
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Open the link</h3>
+                            <p>Use the invitation link or QR code. Nothing to install.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Connect JoyID</h3>
+                            <p>Your passkey derives a pseudonym for this election only. An empty wallet is enough.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Cast your ballot</h3>
+                            <p>Your browser encrypts the ballot, adds a proof that it is a valid vote, and sends it to the relay. You get a signed receipt.</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h3>Verify</h3>
+                            <p>Check that your ballot is included. After release, anyone can recheck every proof, every sum and the final count from public chain data.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <section id="apply" class="apply band">
-      <div class="wrap">
-        <h2>Apply to the founding cohort</h2>
-        <p>The first Merit Round opens <strong>1 March 2027</strong>. Applications before
-          then are considered for the founding cohort, which shares the first
-          <span class="num">100&nbsp;MV</span> equally.</p>
+    <!-- Status Section -->
+    <section id="status" class="section security-section">
+        <div class="container">
+            <h2 class="section-title">What this prototype does today</h2>
+            <p class="section-subtitle">The prototype shows the user flow on CKB testnet. It was built for an earlier design (v1), so the security guarantees above are not in it yet.</p>
 
-        <ol class="ask">
-          <li>A link to something you have made. A repository, a paper, a portfolio, a
-            campaign, a professional profile. Not a CV.</li>
-          <li>About 300 words: why fair on-chain voting matters to you, and what you would
-            work on in your first two quarters.</li>
-          <li>Your real name, known to the other contributors. You can stay pseudonymous
-            in public.</li>
-        </ol>
+            <div class="status-table-wrap">
+                <table class="status-table">
+                    <thead>
+                        <tr><th scope="col">Part</th><th scope="col">Design (v2.3)</th><th scope="col">This prototype</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><th scope="row">Ballot encryption</th><td>One encrypted 0/1 per option under the trustees' joint key</td><td class="gap">Encrypted in the browser with a key the organiser holds</td></tr>
+                        <tr><th scope="row">Counting</th><td>Added up while encrypted; only sums decrypted by <em>t</em> trustees</td><td class="gap">The organiser decrypts the ballots</td></tr>
+                        <tr><th scope="row">On-chain script</th><td>Frozen; checks every ballot, the sums and the result</td><td class="gap">A stub that accepts every transaction</td></tr>
+                        <tr><th scope="row">Voter wallet</th><td>Derives a pseudonym only; never on chain</td><td class="gap">Connects directly; no pseudonym yet</td></tr>
+                        <tr><th scope="row">Submission</th><td>Ballot Relay: sponsored, batched, shuffled, with receipts</td><td class="gap">Submitted directly</td></tr>
+                        <tr><th scope="row">User flow</th><td>Create, invite, vote, revote, release, audit</td><td class="ok">Clickable on testnet</td></tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <p>Applications are public. The Steward selects the founding cohort against the
-          criteria in the Charter, and publishes every application and the reason for
-          every decision. AI may be used to summarise and shortlist applications. The
-          Steward makes every decision.</p>
-        <p>If fewer than five people qualify by 1 March 2027, the first round moves one
-          quarter and we say so.</p>
-
-        <p class="actions">
-          <a class="btn" href="https://github.com/psawyerberlin/votesecure/issues/new?template=founding-application.yml" target="_blank" rel="noopener">Apply on GitHub<span class="visually-hidden"> (opens in a new tab)</span></a>
-        </p>
-
-        <!-- TODO(patrick): non-GitHub application route (SITE_BRIEF section 4.6 / 5).
-             Add a real contact address here for applicants who will not use GitHub, with
-             the three points above repeated so they can be copied. Do NOT publish a
-             placeholder address: a dead inbox in front of an applicant is worse than
-             none. When the address exists, replace the paragraph below with:
-             <p class="alt">Prefer not to use GitHub? Email
-             <a href="mailto:ADDRESS">ADDRESS</a> with the three points above.</p> -->
-        <p class="alt">A contact route for applicants who do not use GitHub will be
-          published here shortly.</p>
-
-        <p class="fineprint">We cannot pay anyone. If the project ever receives donations,
-          they are split by MV. That may be nothing, for years, or forever.</p>
-      </div>
+            <p class="status-links">
+                <a href="https://github.com/psawyerberlin/votesecure/blob/main/docs/architecture.md" target="_blank" rel="noopener">Read the full design<span class="visually-hidden"> (opens in a new tab)</span></a>
+                <a href="about.html#unsolved" target="_blank" rel="noopener">See what is still unsolved<span class="visually-hidden"> (opens in a new tab)</span></a>
+            </p>
+        </div>
     </section>
 
-    <section id="prototype" class="prototype">
-      <div class="wrap">
-        <h2>There is already code</h2>
-        <p>A prototype dApp runs on the CKB test network:</p>
-        <ul class="runs">
-          <li>ballot encryption in the browser</li>
-          <li>on-chain event publishing and ballot submission</li>
-          <li>results the organiser decrypts</li>
-        </ul>
-        <p>It follows the earlier v1 design, not the current architecture, and its
-          on-chain script does not yet check anything. It is not secure enough for a real
-          election. It exists so you can see that this is engineering, not a
-          whitepaper.</p>
-        <p class="actions">
-          <a class="plain" href="demo.html">Open the prototype <span aria-hidden="true">&rarr;</span></a>
-          <a class="plain" href="https://github.com/psawyerberlin/votesecure" target="_blank" rel="noopener">Read the code <span aria-hidden="true">&rarr;</span><span class="visually-hidden"> (opens in a new tab)</span></a>
-        </p>
-      </div>
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Try the flow</h2>
+            <p>Create a test election or vote in one. Use a fresh JoyID wallet; this runs on the CKB testnet.</p>
+            <div class="cta-buttons">
+                <a href="web/organizer.html" class="btn btn-primary">Create a test election</a>
+                <a href="web/voter.html" class="btn btn-outline">Vote in a test election</a>
+            </div>
+        </div>
     </section>
 
-  </main>
+    <!-- Footer -->
+	 <footer class="footer">
+		<div class="container">
+			<div class="footer-content">
+				<div class="footer-brand">
+					<div class="nav-brand">
+						<a href="/">
+							<svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+								<path d="M9 11l3 3L22 4"></path>
+								<path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+							</svg>
+							<span class="logo-text">VoteSecure</span>
+						</a>
+					</div>
+					<p>Privacy-preserving voting on Nervos CKB</p>
+				</div>
+				<div class="footer-links">
+					<div class="footer-column">
+						<h4>Product</h4>
+						<a href="web/organizer.html">Create Election</a>
+						<a href="web/voter.html">Vote</a>
+						<a href="#features">The idea</a>
+					</div>
+					<div class="footer-column">
+						<h4>Resources</h4>
+						<a href="https://github.com/psawyerberlin/votesecure/tree/main/docs" target="_blank" rel="noopener noreferrer">Documentation<span class="visually-hidden"> (opens in a new tab)</span></a>
+						<a href="about.html" target="_blank" rel="noopener">About the project<span class="visually-hidden"> (opens in a new tab)</span></a>
+						<a href="https://github.com/psawyerberlin/votesecure/" target="_blank" rel="noopener noreferrer">GitHub<span class="visually-hidden"> (opens in a new tab)</span></a>
+					</div>
+					<div class="footer-column">
+						<h4>Legal</h4>
+						<a href="datenschutz.html">Datenschutz / Privacy</a>
+						<a href="impressum.html">Impressum</a>
+						<a href="https://github.com/psawyerberlin/votesecure/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Open Source (MIT License)<span class="visually-hidden"> (opens in a new tab)</span></a>
+					</div>
+				</div>
+			</div>
+			<div class="footer-bottom">
+				<p>&copy; VoteSecure. Prototype v0.9 (v1 design) &middot; Design: Architecture v2.3. Open source under the MIT License.</p>
+				<p>Runs on the CKB testnet. Do not use for real elections, polls or funds. Data may be reset.</p>
+			</div>
+		</div>
+	</footer>
 
-  <footer class="colophon">
-    <div class="wrap">
-      <ul>
-        <li><a href="https://github.com/psawyerberlin/votesecure" target="_blank" rel="noopener">Repository<span class="visually-hidden"> (opens in a new tab)</span></a></li>
-        <li><a href="charter.html">Charter</a></li>
-        <li><a href="impressum.html">Impressum</a></li>
-        <li><a href="datenschutz.html">Datenschutz</a></li>
-        <li><a href="https://github.com/psawyerberlin/votesecure/blob/main/LICENSE" target="_blank" rel="noopener">MIT Licence<span class="visually-hidden"> (opens in a new tab)</span></a></li>
-        <!-- TODO(patrick): add Telegram group link here (SITE_BRIEF section 4.8).
-             Not rendered while the URL is a placeholder — an unresolvable link in the
-             footer is worse than a missing one. -->
-      </ul>
-      <p class="repeat">No token. No investment round. Ever.</p>
-    </div>
-  </footer>
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                document.getElementById(tab).classList.add('active');
+            });
+        });
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+	<script type="application/ld+json">
+	{
+	  "@context": "https://schema.org",
+	  "@type": ["SoftwareApplication","Organization"],
+	  "name": "VoteSecure",
+	  "applicationCategory": "DeveloperApplication",
+	  "offers": { "@type": "Offer", "price": "0" },
+	  "softwareVersion": "0.9",
+	  "url": "https://votesecure.net",
+	  "codeRepository": "https://github.com/psawyerberlin/votesecure",
+	  "description": "Open-source software for verifiable, testnet-based voting demos."
+	}
+	</script>
 </body>
 </html>

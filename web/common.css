@@ -519,3 +519,5 @@ a:hover {
 .notification-error   { border-left: 4px solid #ef4444; }
 .notification-info    { border-left: 4px solid #3b82f6; }
 .notification-warning { border-left: 4px solid #f59e0b; }
+.prototype-banner a { color: #fff; text-decoration: underline; text-underline-offset: 3px; font-weight: 600; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

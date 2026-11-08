@@ -18,12 +18,12 @@ OUT=site-dist
 rm -rf "$OUT" site-dist.zip
 mkdir -p "$OUT/assets/fonts" "$OUT/web" "$OUT/src"
 
-# Recruitment site (static)
-cp index.html charter.html demo.html impressum.html datenschutz.html favicon.svg "$OUT/"
+# Front page = prototype landing (index.html); project page = about.html
+cp index.html about.html charter.html impressum.html datenschutz.html favicon.svg "$OUT/"
 cp assets/site.css "$OUT/assets/"
 cp assets/fonts/*.woff2 assets/fonts/Public-Sans-OFL.txt "$OUT/assets/fonts/"
 
-# Prototype dApp (/demo.html -> web/*)
+# Prototype dApp pages
 cp web/*.html web/*.css web/*.js "$OUT/web/"
 cp src/*.js "$OUT/src/"
 

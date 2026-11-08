@@ -10,10 +10,9 @@
 </head>
 <body class="organizer-page">
     <div class="prototype-banner" role="alert">
-        <p><strong>Incomplete prototype &mdash; not for real elections or polls.</strong>
-        Runs on the CKB test network; several security problems are unsolved; data may be
-        reset. <a href="../demo.html">About the prototype</a> &middot;
-        <a href="/">votesecure.net</a></p>
+        <p><strong>Prototype on the CKB testnet &mdash; not for real elections.</strong>
+        It shows the user flow; the security design is not implemented yet.
+        <a href="../about.html" target="_blank" rel="noopener">About the project: fair and verifiable voting on a public blockchain<span class="visually-hidden"> (opens in a new tab)</span></a></p>
     </div>
 
     <!-- Navigation -->
@@ -142,7 +141,7 @@
                         <div class="form-group">
                             <label for="resultsReleaseTime">Results Release Time *</label>
                             <input type="datetime-local" id="resultsReleaseTime" required>
-                            <small>Results will be locked until this time and require threshold confirmations</small>
+                            <small>Design: after this time the trustees publish their partial decryptions and anyone can submit the release. In this prototype the organiser decrypts.</small>
                         </div>
 
                         <div class="form-group">
@@ -289,15 +288,15 @@
                                     <input type="radio" name="liveStatsMode" value="hidden" checked>
                                     <div class="radio-content">
                                         <strong>Hidden Until Release</strong>
-                                        <p>Show participation only, no results</p>
+                                        <p>Show participation counts only; option totals appear after release</p>
                                     </div>
                                 </label>
                                 
                                 <label class="radio-option">
-                                    <input type="radio" name="liveStatsMode" value="realtime">
+                                    <input type="radio" name="liveStatsMode" value="realtime" disabled>
                                     <div class="radio-content">
-                                        <strong>Real-Time</strong>
-                                        <p>Show live aggregate results</p>
+                                        <strong>Real-Time (not offered)</strong>
+                                        <p>Dropped by design: decrypting a running total twice would reveal the votes cast in between</p>
                                     </div>
                                 </label>
                             </div>
@@ -501,7 +500,7 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <p>&copy; <a href="../demo.html" class="footer-link">VoteSecure</a>. Privacy-preserving voting on Nervos CKB.</p>
+            <p>&copy; <a href="../index.html" class="footer-link">VoteSecure</a>. Privacy-preserving voting on Nervos CKB.</p>
         </div>
     </footer>
 

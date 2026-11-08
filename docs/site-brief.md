@@ -67,15 +67,19 @@ first screen.
 ## 3. Sitemap
 
 ```
-/                    Front page (the recruitment page) — the main work
-/charter             The Contributor Charter, rendered from CHARTER.md
-/problems            The Research Agenda, long form (optional in v1; anchor on / is enough)
-/demo                The existing dApp, relabelled as a prototype
+/                    The prototype (index.html), with a notice linking to /about.html in a new tab
+/about.html          The recruitment page — the main work
+/charter.html        The Contributor Charter, rendered from CHARTER.md
+/web/*               The prototype's organiser, voter and election pages
 /impressum           Legal notice (required, see §8)
 /datenschutz         Privacy notice (required, see §8)
 ```
 
-Everything except `/demo` is static. Keep it that way.
+Everything is static. Keep it that way.
+
+*Changed 8 Nov 2026:* the prototype is now the front page, for a better first
+impression; it explains the v2.3 concept, states plainly what the prototype does
+and does not do yet, and every page carries a notice linking to `/about.html`.
 
 ---
 

@@ -31,7 +31,7 @@ links to a file that is not in the package.
    root, overwriting existing files. Keep the folder structure:
 
    ```
-   /index.html  /charter.html  /demo.html  /impressum.html  /datenschutz.html
+   /index.html  /about.html  /charter.html  /impressum.html  /datenschutz.html
    /favicon.svg /logo.png
    /assets/site.css   /assets/fonts/*
    /web/*.html *.css *.js
@@ -39,16 +39,17 @@ links to a file that is not in the package.
    ```
 
 3. Delete files the new site no longer uses, if they exist on the server:
-   `/web/index.css`, `/web/privacy.html`, `/web/terms.html`, and any old
+   `/demo.html` (now `index.html`), `/web/index.css`, `/web/privacy.html`, `/web/terms.html`, and any old
    `/documentation/`, `/docs/`, `/PythonSetup/`, `/PS_Local_Notes/` folders.
    The site must not serve design documents or notes; those live on GitHub.
 
 ## Step 3 — check
 
-- `https://votesecure.net/` shows the recruitment page ("Fair and verifiable
-  voting on a public blockchain").
-- `https://votesecure.net/demo.html` shows the red "incomplete prototype"
-  banner; `web/organizer.html` and `web/voter.html` show it too and connect a
+- `https://votesecure.net/` opens the prototype landing page with the red
+  "prototype on the CKB testnet" notice at the top. The notice links to
+  `about.html` ("Fair and verifiable voting on a public blockchain") in a new
+  tab.
+- `web/organizer.html` and `web/voter.html` show the same notice and connect a
   testnet wallet.
 - `charter.html`, `impressum.html`, `datenschutz.html` open.
 - Hard-refresh (Ctrl+F5) to bypass the browser cache.

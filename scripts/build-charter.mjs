@@ -230,7 +230,7 @@ function buildPage(md) {
 
   <header class="masthead">
     <div class="wrap masthead__inner">
-      <a class="nav-brand" href="/">
+      <a class="nav-brand" href="about.html">
         <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
           <path d="M9 11l3 3L22 4"></path>
           <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
@@ -238,7 +238,8 @@ function buildPage(md) {
         <span class="logo-text">VoteSecure</span>
       </a>
       <nav class="jump" aria-label="Site">
-        <a href="/">Home</a>
+        <a href="about.html">About</a>
+        <a href="index.html">Prototype</a>
         <a href="index.html#unsolved">Open problems</a>
         <a href="index.html#apply">Apply</a>
       </nav>
@@ -258,7 +259,7 @@ ${body}
   <footer class="colophon">
     <div class="wrap">
       <ul>
-        <li><a href="/">Home</a></li>
+        <li><a href="about.html">About</a></li>
         <li><a href="https://github.com/psawyerberlin/votesecure" target="_blank" rel="noopener">Repository<span class="visually-hidden"> (opens in a new tab)</span></a></li>
         <li><a href="impressum.html">Impressum</a></li>
         <li><a href="datenschutz.html">Datenschutz</a></li>

@@ -4,7 +4,7 @@ The recruitment site (`/`, `/charter`, `/impressum`, `/datenschutz`) is fully
 self-contained: self-hosted fonts, no analytics, no cookies, no third-party
 network requests.
 
-The **prototype** under `demo.html` and `web/` is older code and is **not** yet
+The **prototype** under `index.html` and `web/` is older code and is **not** yet
 held to that standard. It still pulls libraries from public CDNs at runtime and
 talks to public blockchain infrastructure. This is disclosed to visitors in
 `datenschutz.html` ("The prototype at /demo — third-party services").
