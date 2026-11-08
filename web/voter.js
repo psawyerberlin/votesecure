@@ -50,6 +50,29 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
+ * Resolve once window.CKBService is available. The service is an ES module that
+ * first downloads the CKB library from a CDN, so on page load it is usually not
+ * there yet. Rejects with a clear message on load failure or after timeoutMs.
+ */
+function whenCKBServiceReady(timeoutMs = 30000) {
+    return new Promise((resolve, reject) => {
+        const started = Date.now();
+        const check = () => {
+            if (window.CKBService && typeof window.CKBService.getEvent === 'function') {
+                resolve(window.CKBService);
+            } else if (window.__ckbServiceLoadError) {
+                reject(new Error('The blockchain library could not be loaded. Check your internet connection or ad blocker, then refresh the page.'));
+            } else if (Date.now() - started > timeoutMs) {
+                reject(new Error('The blockchain library took too long to load. Please refresh the page.'));
+            } else {
+                setTimeout(check, 100);
+            }
+        };
+        check();
+    });
+}
+
+/**
  * Wait for CKB Service to be available
  */
 function waitForCKBService() {
@@ -373,10 +396,8 @@ async function loadElection(eventId) {
         document.getElementById('walletRequired').style.display = 'none';
         document.getElementById('electionIdInput').style.display = 'none';
         
-        // Use CKB Service to fetch election from blockchain
-        if (!window.CKBService || !window.CKBService.getEvent) {
-            throw new Error('CKB Service not ready');
-        }
+        // Use CKB Service to fetch election from blockchain (wait for it to load first)
+        await whenCKBServiceReady();
         
         const event = await window.CKBService.getEvent(eventId);
         
